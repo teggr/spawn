@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Spawn is a Spring Boot application that enables configuration, building, and deployment of new AI applications built on the Spring Boot / Spring AI framework. The application provides a RESTful API to manage applications, AI models, and MCP (Model Context Protocol) servers.
+Spawn is a Spring Boot application that enables configuration, building, and deployment of new AI applications built on the Spring Boot / Spring AI framework. The application provides a web-based UI with server-side rendered HTML pages to manage applications, AI models, and MCP (Model Context Protocol) servers. It also includes Docker integration for container management.
 
 ## Technology Stack
 
@@ -10,6 +10,8 @@ Spawn is a Spring Boot application that enables configuration, building, and dep
 - **Spring Boot 3.2.0** - Application framework
 - **Spring Data JPA** - Data persistence layer
 - **H2 Database** - In-memory database for development
+- **J2HTML 1.6.0** - Java HTML builder for server-side rendering
+- **Docker Java 3.3.4** - Docker client integration
 - **Maven** - Build and dependency management
 - **JUnit 5** - Testing framework
 
@@ -20,20 +22,26 @@ The project follows a layered architecture with clear separation of concerns:
 ```
 src/main/java/com/teggr/spawn/
 ├── SpawnApplication.java          # Main Spring Boot application
-├── controller/                    # REST API controllers (see controller agent)
-├── dto/                           # Data Transfer Objects for API requests/responses
+├── controller/                    # MVC controllers (see controller agent)
+├── view/                          # J2HTML view classes for server-side rendering
+├── dto/                           # Data Transfer Objects for internal data passing
 ├── model/                         # JPA entities for database persistence
 ├── repository/                    # Spring Data JPA repositories
-└── service/                       # Business logic layer
+├── service/                       # Business logic layer
+├── config/                        # Configuration classes (Docker, View)
+└── docker/                        # Docker integration (DockerTemplate)
 ```
 
 ### Layer Responsibilities
 
-- **Controllers**: Handle HTTP requests, validation, and response formatting
+- **Controllers**: Handle HTTP requests, render views, process form submissions
+- **Views**: J2HTML-based server-side rendered HTML pages
 - **Services**: Contain business logic and orchestrate repository operations
 - **Repositories**: Provide data access using Spring Data JPA
 - **Models (Entities)**: JPA entities representing database tables
-- **DTOs**: Transfer data between client and server, separate from entities
+- **DTOs**: Transfer data internally (still used by services)
+- **Config**: Configuration beans for Docker and view resolution
+- **Docker**: Docker client integration for container management
 
 ## Core Domain Concepts
 
@@ -48,13 +56,16 @@ src/main/java/com/teggr/spawn/
 
 ## API Design Patterns
 
-All REST endpoints follow consistent patterns:
+The application uses server-side rendered HTML with Spring MVC patterns:
 
-- `POST /api/{resource}` - Create new resource (returns 201 Created)
-- `GET /api/{resource}` - List all resources (returns 200 OK)
-- `GET /api/{resource}/{id}` - Get single resource by ID (returns 200 OK or 404 Not Found)
-- `PUT /api/{resource}/{id}` - Update resource (returns 200 OK or 404 Not Found)
-- `DELETE /api/{resource}/{id}` - Delete resource (returns 204 No Content or 404 Not Found)
+- `GET /{resource}` - Display list page (returns HTML view)
+- `GET /{resource}/new` - Display creation form (returns HTML view)
+- `POST /{resource}` - Process form submission to create resource (redirect on success)
+- `GET /{resource}/{id}/edit` - Display edit form (returns HTML view)
+- `POST /{resource}/{id}` - Process form submission to update resource (redirect on success)
+- `POST /{resource}/{id}/delete` - Delete resource (redirect on success)
+
+All endpoints return HTML views rendered using J2HTML, not JSON responses.
 
 ## Coding Standards
 
@@ -70,13 +81,15 @@ All REST endpoints follow consistent patterns:
 
 - Use `ResourceNotFoundException` for entities not found
 - `GlobalExceptionHandler` provides centralized exception handling
-- Return appropriate HTTP status codes (404 for not found, 400 for validation errors, etc.)
+- Controllers catch exceptions and add error messages to the view model
+- Return to the form page with error messages displayed to the user
 
-### Validation
+### Form Validation
 
-- Use Jakarta Bean Validation annotations (`@Valid`, `@NotBlank`, etc.)
-- Validate at the controller layer using `@Valid` on request DTOs
-- Return meaningful error messages to clients
+- Use `@RequestParam` with `required` attribute for form fields
+- Validate at the controller layer before calling service methods
+- Display validation errors in the view using Bootstrap alert components
+- Return to the form with pre-filled data when validation fails
 
 ## Building and Testing
 
@@ -98,10 +111,19 @@ mvn test -Dtest=ClassName#method   # Run specific test method
 
 ### Test Structure
 
-- All tests are integration tests using `@SpringBootTest`
-- Tests use `MockMvc` for testing REST endpoints
+- Tests use `@SpringBootTest` with `@AutoConfigureMockMvc` for integration testing
+- Tests use `MockMvc` for testing MVC controllers
 - Database is automatically reset between tests
+- Tests verify HTML responses and page rendering
 - See unit-testing agent for detailed testing guidance
+
+## Docker Integration
+
+- **DockerTemplate** class provides generic Docker operations
+- Configuration via `DockerConfiguration` and `DockerConfigurationProperties`
+- Operations: list containers, run containers, stop containers, remove containers
+- Configurable Docker host, TLS settings, and timeouts
+- Used for managing containerized AI applications
 
 ## Database
 
@@ -117,9 +139,10 @@ mvn test -Dtest=ClassName#method   # Run specific test method
 1. Create or modify entities in `model/` package
 2. Create or update repositories in `repository/` package
 3. Implement business logic in `service/` package
-4. Create DTOs for API requests/responses in `dto/` package
-5. Implement REST endpoints in `controller/` package
-6. Write integration tests in `src/test/java/`
+4. Create DTOs for internal data passing in `dto/` package (if needed)
+5. Create view classes in `view/` package using J2HTML
+6. Implement MVC controllers in `controller/` package
+7. Write integration tests in `src/test/java/`
 
 ## Important Notes for Code Generation
 
@@ -127,6 +150,8 @@ mvn test -Dtest=ClassName#method   # Run specific test method
 - Use the same package structure as existing code
 - Match the coding style of surrounding code
 - Ensure all new endpoints have corresponding tests
-- Use appropriate HTTP status codes and error handling
-- Validate input at the controller layer
+- Controllers return view names, not JSON responses
+- Use J2HTML for building HTML in view classes
+- Forms submit via POST with `@RequestParam` for form fields
+- Use redirects after successful POST operations (Post-Redirect-Get pattern)
 - Keep business logic in the service layer, not in controllers

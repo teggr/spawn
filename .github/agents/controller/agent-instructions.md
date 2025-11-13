@@ -1,15 +1,16 @@
 # Controller Agent Instructions
 
-This agent specializes in creating and maintaining REST controllers for the Spawn application.
+This agent specializes in creating and maintaining MVC controllers for the Spawn application.
 
 ## Controller Purpose
 
 Controllers in the Spawn application are responsible for:
-- Handling HTTP requests and responses
-- Request validation using Jakarta Bean Validation
+- Handling HTTP requests and rendering HTML views
+- Processing form submissions using `@RequestParam`
 - Delegating business logic to service layer
-- Returning appropriate HTTP status codes
-- Mapping between DTOs and service responses
+- Managing model attributes for views
+- Implementing Post-Redirect-Get pattern after form submissions
+- Error handling and displaying errors to users
 
 ## Controller Structure Pattern
 
@@ -21,15 +22,14 @@ package com.teggr.spawn.controller;
 import com.teggr.spawn.dto.ResourceRequest;
 import com.teggr.spawn.dto.ResourceResponse;
 import com.teggr.spawn.service.ResourceService;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/resources")
+@Controller
+@RequestMapping("/resources")
 public class ResourceController {
 
     private final ResourceService resourceService;
@@ -38,36 +38,72 @@ public class ResourceController {
         this.resourceService = resourceService;
     }
 
-    @PostMapping
-    public ResponseEntity<ResourceResponse> createResource(@Valid @RequestBody ResourceRequest request) {
-        ResourceResponse response = resourceService.createResource(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
     @GetMapping
-    public ResponseEntity<List<ResourceResponse>> getAllResources() {
+    public String listResources(Model model) {
         List<ResourceResponse> resources = resourceService.getAllResources();
-        return ResponseEntity.ok(resources);
+        model.addAttribute("resources", resources);
+        return "resourcesListPage";
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ResourceResponse> getResourceById(@PathVariable Long id) {
-        ResourceResponse response = resourceService.getResourceById(id);
-        return ResponseEntity.ok(response);
+    @GetMapping("/new")
+    public String newResourceForm() {
+        return "resourceFormPage";
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ResourceResponse> updateResource(
-            @PathVariable Long id,
-            @Valid @RequestBody ResourceRequest request) {
-        ResourceResponse response = resourceService.updateResource(id, request);
-        return ResponseEntity.ok(response);
+    @PostMapping
+    public String createResource(@RequestParam String name, 
+                                @RequestParam String type,
+                                @RequestParam(required = false) String description,
+                                Model model) {
+        try {
+            ResourceRequest request = new ResourceRequest(name, type);
+            request.setDescription(description);
+            resourceService.createResource(request);
+            return "redirect:/resources";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("name", name);
+            model.addAttribute("type", type);
+            model.addAttribute("description", description);
+            return "resourceFormPage";
+        }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteResource(@PathVariable Long id) {
+    @GetMapping("/{id}/edit")
+    public String editResourceForm(@PathVariable Long id, Model model) {
+        ResourceResponse resource = resourceService.getResourceById(id);
+        model.addAttribute("resourceId", resource.getId().toString());
+        model.addAttribute("name", resource.getName());
+        model.addAttribute("type", resource.getType());
+        model.addAttribute("description", resource.getDescription());
+        return "resourceFormPage";
+    }
+
+    @PostMapping("/{id}")
+    public String updateResource(@PathVariable Long id,
+                                @RequestParam String name,
+                                @RequestParam String type,
+                                @RequestParam(required = false) String description,
+                                Model model) {
+        try {
+            ResourceRequest request = new ResourceRequest(name, type);
+            request.setDescription(description);
+            resourceService.updateResource(id, request);
+            return "redirect:/resources";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("resourceId", id.toString());
+            model.addAttribute("name", name);
+            model.addAttribute("type", type);
+            model.addAttribute("description", description);
+            return "resourceFormPage";
+        }
+    }
+
+    @PostMapping("/{id}/delete")
+    public String deleteResource(@PathVariable Long id) {
         resourceService.deleteResource(id);
-        return ResponseEntity.noContent().build();
+        return "redirect:/resources";
     }
 }
 ```
@@ -76,36 +112,37 @@ public class ResourceController {
 
 ### Class-Level Annotations
 
-- `@RestController` - Combines `@Controller` and `@ResponseBody`, returns data directly as JSON
-- `@RequestMapping("/api/resources")` - Base path for all endpoints in this controller
+- `@Controller` - Marks the class as an MVC controller (returns view names)
+- `@RequestMapping("/resources")` - Base path for all endpoints in this controller
 
 ### Method-Level Annotations
 
-- `@PostMapping` - Handle HTTP POST requests (create)
-- `@GetMapping` - Handle HTTP GET requests (read)
-- `@PutMapping` - Handle HTTP UPDATE requests (update)
-- `@DeleteMapping` - Handle HTTP DELETE requests (delete)
-- `@PatchMapping` - Handle HTTP PATCH requests (partial update) - rarely used in this project
+- `@GetMapping` - Handle HTTP GET requests (display pages)
+- `@PostMapping` - Handle HTTP POST requests (process forms)
+- `@GetMapping("/{id}/edit")` - Display edit form with path variable
+- `@PostMapping("/{id}/delete")` - Delete operation via POST
 
 ### Parameter Annotations
 
-- `@RequestBody` - Bind request body JSON to Java object
-- `@Valid` - Trigger validation on request DTO
-- `@PathVariable` - Extract values from URI path (e.g., `/api/resources/{id}`)
-- `@RequestParam` - Extract query parameters (e.g., `/api/resources?name=value`)
+- `@RequestParam` - Extract form field values from POST requests
+- `@PathVariable` - Extract values from URI path (e.g., `/resources/{id}`)
+- `Model` - Spring MVC model object for passing attributes to views
 
-## HTTP Status Codes
+## Return Values and Redirects
 
-Use appropriate status codes for each operation:
+Controllers return view names (Strings) instead of ResponseEntity:
 
-| Operation | Success Status | Method |
-|-----------|---------------|---------|
-| Create (POST) | 201 Created | `ResponseEntity.status(HttpStatus.CREATED).body(response)` |
-| Read (GET) | 200 OK | `ResponseEntity.ok(response)` |
-| Update (PUT) | 200 OK | `ResponseEntity.ok(response)` |
-| Delete (DELETE) | 204 No Content | `ResponseEntity.noContent().build()` |
-| Not Found | 404 Not Found | Handled by `GlobalExceptionHandler` |
-| Validation Error | 400 Bad Request | Handled by Spring automatically with `@Valid` |
+| Operation | Return Value | Method |
+|-----------|--------------|---------|
+| Display list | View name | `return "resourcesListPage";` |
+| Display form | View name | `return "resourceFormPage";` |
+| Create (success) | Redirect | `return "redirect:/resources";` |
+| Create (error) | View name | `return "resourceFormPage";` |
+| Update (success) | Redirect | `return "redirect:/resources";` |
+| Update (error) | View name | `return "resourceFormPage";` |
+| Delete | Redirect | `return "redirect:/resources";` |
+
+**Post-Redirect-Get Pattern**: Always redirect after successful POST operations to prevent form resubmission.
 
 ## Dependency Injection
 
@@ -125,98 +162,145 @@ public ResourceController(ResourceService resourceService) {
 private ResourceService resourceService;
 ```
 
-## Request Validation
+## Form Validation
 
-- Use `@Valid` annotation on `@RequestBody` parameters
-- Validation rules are defined in DTO classes using Jakarta Bean Validation
-- Spring automatically returns 400 Bad Request for validation failures
-- `GlobalExceptionHandler` formats validation error responses
+- Use `@RequestParam` with `required` attribute for mandatory fields
+- Validation happens in try-catch blocks in controller methods
+- On validation error, add error message to model and return to form
+- Pre-fill form fields with submitted values when showing errors
 
 Example:
 ```java
 @PostMapping
-public ResponseEntity<ResourceResponse> createResource(
-        @Valid @RequestBody ResourceRequest request) {
-    // Spring validates request automatically before this code runs
-    ResourceResponse response = resourceService.createResource(request);
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+public String createResource(@RequestParam String name, 
+                            @RequestParam String type,
+                            Model model) {
+    try {
+        // Validation logic or service call
+        resourceService.createResource(request);
+        return "redirect:/resources";
+    } catch (Exception e) {
+        model.addAttribute("error", e.getMessage());
+        model.addAttribute("name", name);
+        model.addAttribute("type", type);
+        return "resourceFormPage";
+    }
 }
 ```
 
 ## Exception Handling
 
-Controllers should **not** handle exceptions directly. All exception handling is centralized in `GlobalExceptionHandler`:
+Controllers catch exceptions in try-catch blocks and handle them locally:
 
-- `ResourceNotFoundException` → 404 Not Found response
-- Validation errors → 400 Bad Request with error details
-- Other exceptions → 500 Internal Server Error
+- Service exceptions → Catch, add error to model, return form view
+- `ResourceNotFoundException` → Let it bubble to `GlobalExceptionHandler`
+- Form validation errors → Catch, add error message, return form with data
 
-Controllers just let exceptions bubble up - the handler will catch them.
+Controllers handle errors by adding them to the model for display in views.
 
 ## Controller Responsibilities
 
 ### ✅ Controllers SHOULD:
 - Accept HTTP requests
-- Validate input using `@Valid`
+- Extract form data using `@RequestParam`
 - Call service methods
-- Return appropriate ResponseEntity with status codes
-- Map path variables and request parameters
-- Use DTOs for request/response
+- Add attributes to Model for views
+- Return view names or redirects
+- Catch exceptions and display errors
+- Use Post-Redirect-Get pattern
 
 ### ❌ Controllers SHOULD NOT:
 - Contain business logic (belongs in services)
 - Directly access repositories (use services)
-- Handle exceptions (use GlobalExceptionHandler)
+- Return JSON responses (use view names instead)
 - Perform database operations
-- Transform domain objects (use DTOs)
 - Contain complex logic
 
 ## Standard CRUD Endpoints
 
-### Create Resource (POST)
-```java
-@PostMapping
-public ResponseEntity<ResourceResponse> createResource(@Valid @RequestBody ResourceRequest request) {
-    ResourceResponse response = resourceService.createResource(request);
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
-}
-```
-
-### Get All Resources (GET)
+### Display List Page (GET)
 ```java
 @GetMapping
-public ResponseEntity<List<ResourceResponse>> getAllResources() {
+public String listResources(Model model) {
     List<ResourceResponse> resources = resourceService.getAllResources();
-    return ResponseEntity.ok(resources);
+    model.addAttribute("resources", resources);
+    return "resourcesListPage";
 }
 ```
 
-### Get Resource by ID (GET)
+### Display Create Form (GET)
 ```java
-@GetMapping("/{id}")
-public ResponseEntity<ResourceResponse> getResourceById(@PathVariable Long id) {
-    ResourceResponse response = resourceService.getResourceById(id);
-    return ResponseEntity.ok(response);
+@GetMapping("/new")
+public String newResourceForm() {
+    return "resourceFormPage";
 }
 ```
 
-### Update Resource (PUT)
+### Process Create Form (POST)
 ```java
-@PutMapping("/{id}")
-public ResponseEntity<ResourceResponse> updateResource(
-        @PathVariable Long id,
-        @Valid @RequestBody ResourceRequest request) {
-    ResourceResponse response = resourceService.updateResource(id, request);
-    return ResponseEntity.ok(response);
+@PostMapping
+public String createResource(@RequestParam String name,
+                            @RequestParam String type,
+                            @RequestParam(required = false) String description,
+                            Model model) {
+    try {
+        ResourceRequest request = new ResourceRequest(name, type);
+        request.setDescription(description);
+        resourceService.createResource(request);
+        return "redirect:/resources";
+    } catch (Exception e) {
+        model.addAttribute("error", e.getMessage());
+        model.addAttribute("name", name);
+        model.addAttribute("type", type);
+        model.addAttribute("description", description);
+        return "resourceFormPage";
+    }
 }
 ```
 
-### Delete Resource (DELETE)
+### Display Edit Form (GET)
 ```java
-@DeleteMapping("/{id}")
-public ResponseEntity<Void> deleteResource(@PathVariable Long id) {
+@GetMapping("/{id}/edit")
+public String editResourceForm(@PathVariable Long id, Model model) {
+    ResourceResponse resource = resourceService.getResourceById(id);
+    model.addAttribute("resourceId", resource.getId().toString());
+    model.addAttribute("name", resource.getName());
+    model.addAttribute("type", resource.getType());
+    model.addAttribute("description", resource.getDescription());
+    return "resourceFormPage";
+}
+```
+
+### Process Update Form (POST)
+```java
+@PostMapping("/{id}")
+public String updateResource(@PathVariable Long id,
+                            @RequestParam String name,
+                            @RequestParam String type,
+                            @RequestParam(required = false) String description,
+                            Model model) {
+    try {
+        ResourceRequest request = new ResourceRequest(name, type);
+        request.setDescription(description);
+        resourceService.updateResource(id, request);
+        return "redirect:/resources";
+    } catch (Exception e) {
+        model.addAttribute("error", e.getMessage());
+        model.addAttribute("resourceId", id.toString());
+        model.addAttribute("name", name);
+        model.addAttribute("type", type);
+        model.addAttribute("description", description);
+        return "resourceFormPage";
+    }
+}
+```
+
+### Delete Resource (POST)
+```java
+@PostMapping("/{id}/delete")
+public String deleteResource(@PathVariable Long id) {
     resourceService.deleteResource(id);
-    return ResponseEntity.noContent().build();
+    return "redirect:/resources";
 }
 ```
 
@@ -224,25 +308,23 @@ public ResponseEntity<Void> deleteResource(@PathVariable Long id) {
 
 For managing many-to-many relationships (e.g., adding MCP servers to applications):
 
-### Add Relationship
+### Add Relationship (POST)
 ```java
 @PostMapping("/{parentId}/children/{childId}")
-public ResponseEntity<ParentResponse> addChild(
-        @PathVariable Long parentId,
-        @PathVariable Long childId) {
-    ParentResponse response = parentService.addChild(parentId, childId);
-    return ResponseEntity.ok(response);
+public String addChild(@PathVariable Long parentId,
+                      @PathVariable Long childId) {
+    parentService.addChild(parentId, childId);
+    return "redirect:/parents/" + parentId;
 }
 ```
 
-### Remove Relationship
+### Remove Relationship (POST)
 ```java
-@DeleteMapping("/{parentId}/children/{childId}")
-public ResponseEntity<ParentResponse> removeChild(
-        @PathVariable Long parentId,
-        @PathVariable Long childId) {
-    ParentResponse response = parentService.removeChild(parentId, childId);
-    return ResponseEntity.ok(response);
+@PostMapping("/{parentId}/children/{childId}/remove")
+public String removeChild(@PathVariable Long parentId,
+                         @PathVariable Long childId) {
+    parentService.removeChild(parentId, childId);
+    return "redirect:/parents/" + parentId;
 }
 ```
 
@@ -250,47 +332,57 @@ public ResponseEntity<ParentResponse> removeChild(
 
 - Controller class name: `{EntityName}Controller`
 - Method names: Use clear, descriptive verbs
-  - `createResource()`, `getResourceById()`, `updateResource()`, `deleteResource()`
+  - `listResources()`, `newResourceForm()`, `createResource()`, `editResourceForm()`, `updateResource()`, `deleteResource()`
   - For relationships: `addChild()`, `removeChild()`
+- View names: lowercase with suffix
+  - `resourcesListPage`, `resourceFormPage`, `resourceDetailPage`
 - Request DTOs: `{EntityName}Request`
 - Response DTOs: `{EntityName}Response`
 
-## API URL Design
+## URL Design
 
-Follow RESTful conventions:
-- Use plural nouns: `/api/models`, `/api/applications`
-- Use IDs in path: `/api/models/{id}`
-- Nest related resources: `/api/applications/{applicationId}/mcp-servers/{mcpServerId}`
-- Use HTTP verbs correctly (POST=create, GET=read, PUT=update, DELETE=delete)
+Follow MVC conventions:
+- Use plural nouns: `/models`, `/applications`
+- Use IDs in path: `/models/{id}/edit`
+- Use verb suffixes for actions: `/new`, `/edit`, `/delete`
+- Nest related resources: `/applications/{applicationId}/mcp-servers/{mcpServerId}`
+- Use POST for all mutations (create, update, delete)
 
 ## Example: Complete Controller
 
 See existing controllers for reference:
-- `ModelController` - Simple CRUD operations
+- `ModelController` - Simple CRUD with forms
 - `ApplicationController` - CRUD plus relationship management
-- `McpServerController` - Simple CRUD operations
+- `McpServerController` - Simple CRUD with forms
+- `IndexController` - Simple home page
 
 ## When Creating New Controllers
 
 1. Create a new class in `src/main/java/com/teggr/spawn/controller/`
-2. Add `@RestController` and `@RequestMapping` annotations
+2. Add `@Controller` and `@RequestMapping` annotations
 3. Inject required service using constructor injection
 4. Implement CRUD endpoints following the standard pattern
-5. Use appropriate HTTP methods and status codes
-6. Validate input with `@Valid` on request DTOs
-7. Return ResponseEntity with proper status codes
-8. Create corresponding integration tests (see unit-testing agent)
-9. Ensure the controller only handles HTTP concerns, not business logic
+5. Use POST for all form submissions
+6. Extract form data with `@RequestParam`
+7. Add Model attributes for views
+8. Return view names (for display) or redirects (after POST)
+9. Catch exceptions and add errors to model
+10. Create corresponding view classes in `view/` package
+11. Create corresponding integration tests (see unit-testing agent)
+12. Ensure the controller only handles HTTP concerns, not business logic
 
 ## Code Quality Checklist
 
 Before completing a controller:
 - ✅ Constructor-based dependency injection used
-- ✅ All parameters properly annotated (`@PathVariable`, `@RequestBody`, `@Valid`)
-- ✅ Correct HTTP methods used (POST, GET, PUT, DELETE)
-- ✅ Appropriate status codes returned
+- ✅ All parameters properly annotated (`@PathVariable`, `@RequestParam`)
+- ✅ Correct HTTP methods used (GET for display, POST for mutations)
+- ✅ View names or redirects returned (not ResponseEntity)
+- ✅ Post-Redirect-Get pattern followed
+- ✅ Exceptions caught and errors added to model
 - ✅ No business logic in controller
 - ✅ No direct repository access
 - ✅ Follows naming conventions
 - ✅ Consistent with existing controllers
 - ✅ Integration tests created
+- ✅ Corresponding view classes created
