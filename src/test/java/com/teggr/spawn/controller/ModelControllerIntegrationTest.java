@@ -1,6 +1,5 @@
 package com.teggr.spawn.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.teggr.spawn.dto.ModelRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,34 +18,26 @@ class ModelControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Test
     void shouldCreateModel() throws Exception {
-        ModelRequest request = new ModelRequest("GPT-4", "OpenAI");
-        request.setDescription("OpenAI GPT-4 Model");
-
-        mockMvc.perform(post("/api/models")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.name").value("GPT-4"))
-                .andExpect(jsonPath("$.type").value("OpenAI"))
-                .andExpect(jsonPath("$.description").value("OpenAI GPT-4 Model"));
+        mockMvc.perform(post("/models")
+                .param("name", "GPT-4")
+                .param("type", "OpenAI")
+                .param("description", "OpenAI GPT-4 Model"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/models"));
     }
 
     @Test
     void shouldGetAllModels() throws Exception {
-        mockMvc.perform(get("/api/models"))
+        mockMvc.perform(get("/models"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Models - Spawn</title>")));
     }
 
     @Test
     void shouldReturnNotFoundWhenModelDoesNotExist() throws Exception {
-        mockMvc.perform(get("/api/models/999"))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/models/999/edit"))
+                .andExpect(status().is4xxClientError());
     }
 }
