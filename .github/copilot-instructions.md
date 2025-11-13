@@ -17,31 +17,29 @@ Spawn is a Spring Boot application that enables configuration, building, and dep
 
 ## Architecture and Project Structure
 
-The project follows a layered architecture with clear separation of concerns:
+The project follows a layered architecture with clear separation of concerns. Recently the code has been reorganized so domain-specific classes live in their own packages (`apps`, `mcp`, `models`) while non-domain web and utility code lives under `web` and `utils`.
 
 ```
-src/main/java/com/teggr/spawn/
+src/main/java/dev/rebelcraft/ai/spawn/
 ├── SpawnApplication.java          # Main Spring Boot application
-├── controller/                    # MVC controllers (see controller agent)
-├── view/                          # J2HTML view classes for server-side rendering
-├── dto/                           # Data Transfer Objects for internal data passing
-├── model/                         # JPA entities for database persistence
-├── repository/                    # Spring Data JPA repositories
-├── service/                       # Business logic layer
+├── apps/                          # Domain: applications (controllers, services, repos, dto, views)
+├── mcp/                           # Domain: MCP servers (controllers, services, repos, dto, views)
+├── models/                        # Domain: models (controllers, services, repos, dto, views)
+├── web/                           # Non-domain web concerns (IndexController, GlobalExceptionHandler, site-wide controllers)
+├── utils/                          # Utilities (Docker integration helpers, templates, common helpers)
 ├── config/                        # Configuration classes (Docker, View)
-└── docker/                        # Docker integration (DockerTemplate)
+└── docker/                        # Docker integration (DockerTemplate) - may also be referenced from utils
 ```
 
 ### Layer Responsibilities
 
-- **Controllers**: Handle HTTP requests, render views, process form submissions
-- **Views**: J2HTML-based server-side rendered HTML pages
-- **Services**: Contain business logic and orchestrate repository operations
-- **Repositories**: Provide data access using Spring Data JPA
-- **Models (Entities)**: JPA entities representing database tables
-- **DTOs**: Transfer data internally (still used by services)
-- **Config**: Configuration beans for Docker and view resolution
-- **Docker**: Docker client integration for container management
+- **Domain packages (apps / mcp / models)**: Each domain package contains its own controllers, services, repositories, DTOs, and view classes related to that domain. Keeping domain code together makes it easier to reason about features and tests.
+- **Web**: Cross-cutting web concerns that are not specific to a single domain (index, global exception handling, site-wide controllers) live in `web`.
+- **Utils**: Shared utilities, helper classes, and Docker helper wrappers that are reused across domains live in `utils`.
+- **Views**: J2HTML-based server-side rendered HTML pages may be colocated inside each domain package (e.g., `apps.view`) or kept in a shared `view` package if pages are shared across domains.
+- **Services**: Contain business logic and orchestrate repository operations and should remain focused and domain-local when possible.
+- **Repositories**: Provide data access using Spring Data JPA and live inside the corresponding domain package.
+- **Config**: Configuration beans for Docker and view resolution.
 
 ## Core Domain Concepts
 
@@ -136,13 +134,12 @@ mvn test -Dtest=ClassName#method   # Run specific test method
 
 ## Development Workflow
 
-1. Create or modify entities in `model/` package
-2. Create or update repositories in `repository/` package
-3. Implement business logic in `service/` package
-4. Create DTOs for internal data passing in `dto/` package (if needed)
-5. Create view classes in `view/` package using J2HTML
-6. Implement MVC controllers in `controller/` package
-7. Write integration tests in `src/test/java/`
+1. Create or modify entities and corresponding controllers, services, repositories, DTOs and views inside the appropriate domain package: `apps/`, `mcp/`, or `models/`.
+2. Place cross-cutting web controllers and site-wide handlers in `web/` (e.g. `IndexController`, `GlobalExceptionHandler`).
+3. Add shared utilities and Docker helpers in `utils/` (or `docker/` if you prefer a dedicated docker package).
+4. Keep business logic in the service layer inside the domain packages.
+5. Use J2HTML to create view classes; prefer colocating views with their domain for clarity.
+6. Write integration tests in `src/test/java/` mirroring the domain package layout.
 
 ## Important Notes for Code Generation
 

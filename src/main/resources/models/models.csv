@@ -1,0 +1,19 @@
+Provider,Multimodality,Tools/Functions,Streaming,Retry,Observability,Built-in JSON,Local,OpenAI API Compatible
+Anthropic Claude,"text, pdf, image",yes,yes,yes,yes,no,no,no
+Azure OpenAI,"text, image",yes,yes,yes,yes,yes,no,yes
+DeepSeek (OpenAI-proxy),text,yes,yes,yes,yes,yes,yes,yes
+Google GenAI,"text, pdf, image, audio, video",yes,yes,yes,yes,yes,no,no
+Google VertexAI Gemini,"text, pdf, image, audio, video",yes,yes,yes,yes,yes,no,yes
+Groq (OpenAI-proxy),"text, image",yes,yes,yes,yes,no,no,yes
+HuggingFace,text,no,no,no,no,no,no,no
+Mistral AI,"text, image, audio",yes,yes,yes,yes,yes,no,yes
+MiniMax,text,yes,yes,yes,yes,no,no,yes
+Moonshot AI,text,yes,yes,yes,yes,yes,no,no
+NVIDIA (OpenAI-proxy),"text, image",yes,yes,yes,yes,no,no,yes
+OCI GenAI/Cohere,text,no,no,no,yes,no,no,no
+Ollama,"text, image",yes,yes,yes,yes,yes,yes,yes
+OpenAI,"In: text, image, audio Out: text, audio",yes,yes,yes,yes,yes,no,yes
+Perplexity (OpenAI-proxy),text,no,yes,yes,yes,no,no,yes
+QianFan,text,no,yes,yes,yes,no,no,no
+ZhiPu AI,"text, image, docs",yes,yes,yes,yes,no,no,no
+Amazon Bedrock Converse,"text, image, video, docs (pdf, html, md, docx …)",yes,yes,yes,yes,no,no,no
