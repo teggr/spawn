@@ -44,19 +44,19 @@ public class ApplicationController {
 
     @PostMapping
     public String createApplication(@RequestParam String name,
-                                   @RequestParam(required = false) String modelId,
+                                   @RequestParam(required = false) String modelProvider,
                                    Model model) {
         try {
             ApplicationRequest request = new ApplicationRequest(name);
-            if (modelId != null && !modelId.isEmpty()) {
-                request.setModelId(Long.parseLong(modelId));
+            if (modelProvider != null && !modelProvider.isEmpty()) {
+                request.setModelProvider(modelProvider);
             }
             applicationService.createApplication(request);
             return "redirect:/applications";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("name", name);
-            model.addAttribute("modelId", modelId);
+            model.addAttribute("modelProvider", modelProvider);
             model.addAttribute("models", modelService.getAllModels());
             return "applicationFormPage";
         }
@@ -88,7 +88,7 @@ public class ApplicationController {
         
         model.addAttribute("applicationId", app.getId().toString());
         model.addAttribute("name", app.getName());
-        model.addAttribute("modelId", app.getModel() != null ? app.getModel().getId().toString() : "");
+        model.addAttribute("modelProvider", app.getModel() != null ? app.getModel().getProvider() : "");
         model.addAttribute("models", models);
         return "applicationFormPage";
     }
@@ -96,12 +96,12 @@ public class ApplicationController {
     @PostMapping("/{id}")
     public String updateApplication(@PathVariable Long id,
                                    @RequestParam String name,
-                                   @RequestParam(required = false) String modelId,
+                                   @RequestParam(required = false) String modelProvider,
                                    Model model) {
         try {
             ApplicationRequest request = new ApplicationRequest(name);
-            if (modelId != null && !modelId.isEmpty()) {
-                request.setModelId(Long.parseLong(modelId));
+            if (modelProvider != null && !modelProvider.isEmpty()) {
+                request.setModelProvider(modelProvider);
             }
             applicationService.updateApplication(id, request);
             return "redirect:/applications";
@@ -109,7 +109,7 @@ public class ApplicationController {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("applicationId", id.toString());
             model.addAttribute("name", name);
-            model.addAttribute("modelId", modelId);
+            model.addAttribute("modelProvider", modelProvider);
             model.addAttribute("models", modelService.getAllModels());
             return "applicationFormPage";
         }

@@ -2,15 +2,15 @@ package dev.rebelcraft.ai.spawn.apps;
 
 import dev.rebelcraft.ai.spawn.mcp.McpServerResponse;
 import dev.rebelcraft.ai.spawn.mcp.McpServer;
-import dev.rebelcraft.ai.spawn.models.Model;
 import dev.rebelcraft.ai.spawn.models.ModelResponse;
 import dev.rebelcraft.ai.spawn.mcp.McpServerRepository;
-import dev.rebelcraft.ai.spawn.models.ModelRepository;
+import dev.rebelcraft.ai.spawn.models.ModelService;
 import dev.rebelcraft.ai.spawn.utils.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -19,24 +19,27 @@ import java.util.stream.Collectors;
 public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
-    private final ModelRepository modelRepository;
+    private final ModelService modelService;
     private final McpServerRepository mcpServerRepository;
 
     public ApplicationService(ApplicationRepository applicationRepository,
-                            ModelRepository modelRepository,
+                            ModelService modelService,
                             McpServerRepository mcpServerRepository) {
         this.applicationRepository = applicationRepository;
-        this.modelRepository = modelRepository;
+        this.modelService = modelService;
         this.mcpServerRepository = mcpServerRepository;
     }
 
     public ApplicationResponse createApplication(ApplicationRequest request) {
         Application application = new Application(request.getName());
         
-        if (request.getModelId() != null) {
-            Model model = modelRepository.findById(request.getModelId())
-                .orElseThrow(() -> new ResourceNotFoundException("Model not found with id: " + request.getModelId()));
-            application.setModel(model);
+        if (request.getModelProvider() != null && !request.getModelProvider().isEmpty()) {
+            // Validate that the model provider exists in CSV
+            Optional<ModelResponse> model = modelService.getModelByProvider(request.getModelProvider());
+            if (model.isEmpty()) {
+                throw new IllegalArgumentException("Model provider not found: " + request.getModelProvider());
+            }
+            application.setModelProvider(request.getModelProvider());
         }
         
         Application savedApplication = applicationRepository.save(application);
@@ -61,10 +64,15 @@ public class ApplicationService {
         
         application.setName(request.getName());
         
-        if (request.getModelId() != null) {
-            Model model = modelRepository.findById(request.getModelId())
-                .orElseThrow(() -> new ResourceNotFoundException("Model not found with id: " + request.getModelId()));
-            application.setModel(model);
+        if (request.getModelProvider() != null && !request.getModelProvider().isEmpty()) {
+            // Validate that the model provider exists in CSV
+            Optional<ModelResponse> model = modelService.getModelByProvider(request.getModelProvider());
+            if (model.isEmpty()) {
+                throw new IllegalArgumentException("Model provider not found: " + request.getModelProvider());
+            }
+            application.setModelProvider(request.getModelProvider());
+        } else {
+            application.setModelProvider(null);
         }
         
         Application updatedApplication = applicationRepository.save(application);
@@ -109,14 +117,9 @@ public class ApplicationService {
             application.getCreatedAt()
         );
         
-        if (application.getModel() != null) {
-            Model model = application.getModel();
-            response.setModel(new ModelResponse(
-                model.getId(),
-                model.getName(),
-                model.getType(),
-                model.getDescription()
-            ));
+        if (application.getModelProvider() != null) {
+            Optional<ModelResponse> model = modelService.getModelByProvider(application.getModelProvider());
+            model.ifPresent(response::setModel);
         }
         
         if (application.getMcpServers() != null) {

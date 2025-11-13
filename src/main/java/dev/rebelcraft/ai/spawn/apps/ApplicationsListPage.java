@@ -84,7 +84,7 @@ public class ApplicationsListPage implements View {
                 each(applications, app -> tr(
                     td(app.getId().toString()),
                     td(app.getName()),
-                    td(app.getModel() != null ? app.getModel().getName() : "None"),
+                    td(app.getModel() != null ? app.getModel().getProvider() : "None"),
                     td(app.getMcpServers() != null ? String.valueOf(app.getMcpServers().size()) : "0"),
                     td(app.getCreatedAt() != null ? app.getCreatedAt().toString() : ""),
                     td(

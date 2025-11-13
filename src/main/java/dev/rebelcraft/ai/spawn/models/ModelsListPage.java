@@ -33,9 +33,9 @@ public class ModelsListPage implements View {
                 div(
                     attrs(".container.mt-4"),
                     div(
-                        attrs(".d-flex.justify-content-between.align-items-center.mb-3"),
-                        h1("Models"),
-                        a(attrs(".btn.btn-primary"), "Create New Model").withHref("/models/new")
+                        attrs(".mb-3"),
+                        h1("Available AI Models"),
+                        p(attrs(".text-muted"), "These models are loaded from the models.csv configuration file.")
                     ),
                     modelsTable(models)
                 ),
@@ -64,39 +64,40 @@ public class ModelsListPage implements View {
         if (models == null || models.isEmpty()) {
             return div(
                 attrs(".alert.alert-info"),
-                "No models found. Create your first model to get started!"
+                "No models found."
             );
         }
 
-        return table(
-            attrs(".table.table-striped"),
-            thead(
-                tr(
-                    th("ID"),
-                    th("Name"),
-                    th("Type"),
-                    th("Description"),
-                    th("Actions")
-                )
-            ),
-            tbody(
-                each(models, modelResponse -> tr(
-                    td(modelResponse.getId().toString()),
-                    td(modelResponse.getName()),
-                    td(modelResponse.getType()),
-                    td(modelResponse.getDescription() != null ? modelResponse.getDescription() : ""),
-                    td(
-                        a(attrs(".btn.btn-sm.btn-primary.me-2"), "Edit")
-                            .withHref("/models/" + modelResponse.getId() + "/edit"),
-                        form(
-                            attrs(".d-inline"),
-                            button(attrs(".btn.btn-sm.btn-danger"), "Delete")
-                                .attr("type", "submit")
-                                .attr("onclick", "return confirm('Are you sure you want to delete this model?')")
-                        ).attr("method", "post")
-                         .attr("action", "/models/" + modelResponse.getId() + "/delete")
+        return div(
+            attrs(".table-responsive"),
+            table(
+                attrs(".table.table-striped.table-hover"),
+                thead(
+                    tr(
+                        th("Provider"),
+                        th("Multimodality"),
+                        th("Tools/Functions"),
+                        th("Streaming"),
+                        th("Retry"),
+                        th("Observability"),
+                        th("Built-in JSON"),
+                        th("Local"),
+                        th("OpenAI API Compatible")
                     )
-                ))
+                ),
+                tbody(
+                    each(models, modelResponse -> tr(
+                        td(modelResponse.getProvider()),
+                        td(modelResponse.getMultimodality()),
+                        td(modelResponse.getToolsFunctions()),
+                        td(modelResponse.getStreaming()),
+                        td(modelResponse.getRetry()),
+                        td(modelResponse.getObservability()),
+                        td(modelResponse.getBuiltInJson()),
+                        td(modelResponse.getLocal()),
+                        td(modelResponse.getOpenAiApiCompatible())
+                    ))
+                )
             )
         );
     }
