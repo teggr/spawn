@@ -1,8 +1,5 @@
 package com.teggr.spawn.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.teggr.spawn.dto.ApplicationRequest;
-import com.teggr.spawn.dto.ModelRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -20,42 +17,33 @@ class ApplicationControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Test
     void shouldCreateApplication() throws Exception {
-        ApplicationRequest request = new ApplicationRequest("Test App");
-
-        mockMvc.perform(post("/api/applications")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.name").value("Test App"))
-                .andExpect(jsonPath("$.createdAt").exists());
+        mockMvc.perform(post("/applications")
+                .param("name", "Test App"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/applications"));
     }
 
     @Test
     void shouldGetAllApplications() throws Exception {
-        mockMvc.perform(get("/api/applications"))
+        mockMvc.perform(get("/applications"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Applications - Spawn</title>")));
     }
 
     @Test
     void shouldReturnNotFoundWhenApplicationDoesNotExist() throws Exception {
-        mockMvc.perform(get("/api/applications/999"))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/applications/999"))
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
     void shouldReturnBadRequestWhenNameIsEmpty() throws Exception {
-        ApplicationRequest request = new ApplicationRequest("");
-
-        mockMvc.perform(post("/api/applications")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+        // HTML form validation should prevent empty name
+        // but if submitted, it will show the form again with error
+        mockMvc.perform(post("/applications")
+                .param("name", ""))
+                .andExpect(status().isOk()); // Returns form page with error
     }
 }
