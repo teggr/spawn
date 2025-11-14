@@ -34,11 +34,10 @@ public class AgentFormPage extends PageView {
 
         boolean isEdit = agentId != null;
 
-        // Small, safe inline JS that manages the client-side MCP list. Keep it concise to avoid quoting issues.
+        // Small inline JS that manages the client-side MCP list (dropdown-only)
         String clientJs = "function addHiddenInput(name,value){var i=document.createElement('input');i.type='hidden';i.name=name;i.value=value;return i;}" +
                 "function addMcpToList(val){if(!val) return;var c=document.getElementById('mcpListContainer');var item=document.createElement('div');item.className='d-flex align-items-center gap-2 mb-1';var span=document.createElement('span');span.innerText=val;var btn=document.createElement('button');btn.className='btn btn-sm btn-outline-danger';btn.type='button';btn.innerText='Remove';btn.onclick=function(){c.removeChild(item);};item.appendChild(span);item.appendChild(btn);item.appendChild(addHiddenInput('mcpServerNames',val));c.appendChild(item);}" +
-                "function addMcpFromDropdown(){var sel=document.getElementById('mcpDropdown'); if(sel){addMcpToList(sel.value);} }" +
-                "function addOtherMcp(){var inp=document.getElementById('otherMcpName'); if(inp){addMcpToList(inp.value); inp.value='';} }";
+                "function addMcpFromDropdown(){var sel=document.getElementById('mcpDropdown'); if(sel){addMcpToList(sel.value);} }";
 
         return createPage(
                 (isEdit ? "Edit Agent" : "Create Agent") + " - Spawn",
@@ -46,6 +45,12 @@ public class AgentFormPage extends PageView {
                 each(
                         h1(isEdit ? "Edit Agent" : "Create New Agent"),
                         error != null ? div(attrs(".alert.alert-danger"), error) : text("") ,
+
+                        // Top action bar with Save and Back
+                        div(attrs(".d-flex.justify-content-end.mb-3"),
+                            button(attrs(".btn.btn-primary.me-2"), "Save").attr("type", "submit").attr("form", "agentForm"),
+                            a(attrs(".btn.btn-secondary"), "Back").withHref("/agents")
+                        ),
 
                         form(
                                 attrs(".mt-3"),
@@ -68,21 +73,13 @@ public class AgentFormPage extends PageView {
                                 div(attrs(".mb-3"),
                                         label(attrs(".form-label"), "MCP Servers"),
 
-                                        // Dropdown + Add button
+                                        // Dropdown + Add button (no free-text option)
                                         div(attrs(".d-flex.gap-2.mb-2"),
                                                 select(attrs(".form-select")).attr("id", "mcpDropdown").attr("name", "_mcpDropdown").with(
                                                         option("Select a server...").attr("value", ""),
                                                         mcpServers != null ? each(renderMcpServerOptions(mcpServers)) : text("")
                                                 ),
                                                 button(attrs(".btn.btn-secondary"), "Add").attr("type", "button").attr("onclick", "addMcpFromDropdown()")
-                                        ),
-
-                                        // Other input
-                                        div(attrs(".mb-2"),
-                                                input(attrs(".form-control")).attr("type", "text").attr("id", "otherMcpName").attr("placeholder", "Other MCP name")
-                                        ),
-                                        div(attrs(".mt-2"),
-                                                button(attrs(".btn.btn-secondary"), "Add Other").attr("type", "button").attr("onclick", "addOtherMcp()")
                                         ),
 
                                         // Visible list container (pre-populate existing names)
@@ -97,20 +94,17 @@ public class AgentFormPage extends PageView {
                                                         ) : text("")
                                                 )
                                         )
-                                ),
-
-                                div(attrs(".mt-3"),
-                                        button(attrs(".btn.btn-primary.me-2"), "Save").attr("type", "submit"),
-                                        a(attrs(".btn.btn-secondary"), "Cancel").withHref("/agents")
                                 )
 
-                        ).attr("method", "post").attr("action", isEdit ? "/agents/" + agentId : "/agents")
+                                // Note: remove bottom Save/Cancel - actions at top
+
+                        ).attr("id", "agentForm").attr("method", "post").attr("action", isEdit ? "/agents/" + agentId : "/agents")
                                 .with(
                                         script(clientJs)
                                 )
-                )
-        );
-    }
+                 )
+         );
+     }
 
     private DomContent[] renderMcpServerOptions(List<McpServerResponse> mcpServers) {
         // Split into favorites and non-favorites, both sorted alphabetically

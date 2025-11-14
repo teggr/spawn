@@ -24,12 +24,6 @@ public class ApplicationDetailPage extends PageView {
   protected DomContent renderPage(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) {
 
     ApplicationResponse app = (ApplicationResponse) model.get("application");
-    @SuppressWarnings("unchecked")
-    List<ModelResponse> availableModels = (List<ModelResponse>) model.get("availableModels");
-    @SuppressWarnings("unchecked")
-    List<AgentResponse> availableAgents = (List<AgentResponse>) model.get("availableAgents");
-    @SuppressWarnings("unchecked")
-    List<McpServerResponse> availableServers = (List<McpServerResponse>) model.get("availableServers");
 
     return DefaultPageLayout.createPage(
       "Application Details - Spawn",
@@ -56,16 +50,16 @@ public class ApplicationDetailPage extends PageView {
           )
         ),
         h3("Associated Models"),
-        modelsSection(app, availableModels),
+        modelsSectionReadOnly(app),
         h3(attrs(".mt-4"), "Associated Agents"),
-        agentsSection(app, availableAgents),
+        agentsSectionReadOnly(app),
         h3(attrs(".mt-4"), "Associated MCP Servers"),
-        mcpServersSection(app, availableServers)
+        mcpServersSectionReadOnly(app)
       )
     );
   }
 
-  private ContainerTag modelsSection(ApplicationResponse app, List<ModelResponse> availableModels) {
+  private ContainerTag<?> modelsSectionReadOnly(ApplicationResponse app) {
     Set<ModelResponse> currentModels = app.getModels();
 
     return div(
@@ -77,8 +71,7 @@ public class ApplicationDetailPage extends PageView {
               th("Provider"),
               th("Multimodality"),
               th("Tools/Functions"),
-              th("Streaming"),
-              th("Actions")
+              th("Streaming")
             )
           ),
           tbody(
@@ -86,49 +79,15 @@ public class ApplicationDetailPage extends PageView {
               td(m.getProvider()),
               td(m.getMultimodality()),
               td(m.getToolsFunctions()),
-              td(m.getStreaming()),
-              td(
-                form(
-                  attrs(".d-inline"),
-                  button(attrs(".btn.btn-sm.btn-danger"), "Remove")
-                    .attr("type", "submit")
-                    .attr("onclick", "return confirm('Are you sure you want to remove this model?')")
-                ).attr("method", "post")
-                  .attr("action", "/applications/" + app.getId() + "/models/" + m.getProvider() + "/remove")
-              )
+              td(m.getStreaming())
             ))
           )
         ) :
-        div(attrs(".alert.alert-info"), "No models associated with this application."),
-
-      h4(attrs(".mt-4"), "Add Model"),
-      availableModels != null && !availableModels.isEmpty() ?
-        form(
-          attrs(".row.g-3.align-items-end"),
-          div(
-            attrs(".col-auto"),
-            label(attrs(".form-label"), "Select Model").attr("for", "modelProvider"),
-            select(attrs(".form-select"))
-              .attr("id", "modelProvider")
-              .attr("name", "modelProvider")
-              .attr("required", "required")
-              .with(
-                option("Choose...").attr("value", ""),
-                each(renderAvailableModelOptions(availableModels))
-              )
-          ),
-          div(
-            attrs(".col-auto"),
-            button(attrs(".btn.btn-primary"), "Add Model")
-              .attr("type", "submit")
-          )
-        ).attr("method", "post")
-          .attr("action", "/applications/" + app.getId() + "/models/add") :
-        div(attrs(".alert.alert-warning"), "No models available to add.")
+        div(attrs(".alert.alert-info"), "No models associated with this application.")
     );
   }
 
-  private ContainerTag agentsSection(ApplicationResponse app, List<AgentResponse> availableAgents) {
+  private ContainerTag<?> agentsSectionReadOnly(ApplicationResponse app) {
     Set<AgentResponse> currentAgents = app.getAgents();
 
     return div(
@@ -138,56 +97,21 @@ public class ApplicationDetailPage extends PageView {
           thead(
             tr(
               th("Name"),
-              th("Description"),
-              th("Actions")
+              th("Description")
             )
           ),
           tbody(
             each(currentAgents, agent -> tr(
               td(agent.getName()),
-              td(agent.getDescription() != null ? agent.getDescription() : ""),
-              td(
-                form(
-                  attrs(".d-inline"),
-                  button(attrs(".btn.btn-sm.btn-danger"), "Remove")
-                    .attr("type", "submit")
-                    .attr("onclick", "return confirm('Are you sure you want to remove this agent?')")
-                ).attr("method", "post")
-                  .attr("action", "/applications/" + app.getId() + "/agents/" + agent.getName() + "/remove")
-              )
+              td(agent.getDescription() != null ? agent.getDescription() : "")
             ))
           )
         ) :
-        div(attrs(".alert.alert-info"), "No agents associated with this application."),
-
-      h4(attrs(".mt-4"), "Add Agent"),
-      availableAgents != null && !availableAgents.isEmpty() ?
-        form(
-          attrs(".row.g-3.align-items-end"),
-          div(
-            attrs(".col-auto"),
-            label(attrs(".form-label"), "Select Agent").attr("for", "agentName"),
-            select(attrs(".form-select"))
-              .attr("id", "agentName")
-              .attr("name", "agentName")
-              .attr("required", "required")
-              .with(
-                option("Choose...").attr("value", ""),
-                each(renderAvailableAgentOptions(availableAgents))
-              )
-          ),
-          div(
-            attrs(".col-auto"),
-            button(attrs(".btn.btn-primary"), "Add Agent")
-              .attr("type", "submit")
-          )
-        ).attr("method", "post")
-          .attr("action", "/applications/" + app.getId() + "/agents/add") :
-        div(attrs(".alert.alert-warning"), "No agents available to add.")
+        div(attrs(".alert.alert-info"), "No agents associated with this application.")
     );
   }
 
-  private ContainerTag mcpServersSection(ApplicationResponse app, List<McpServerResponse> availableServers) {
+  private ContainerTag<?> mcpServersSectionReadOnly(ApplicationResponse app) {
     Set<McpServerResponse> currentServers = app.getMcpServers();
 
     return div(
@@ -198,137 +122,21 @@ public class ApplicationDetailPage extends PageView {
             tr(
               th("Name"),
               th("Icon"),
-              th("Description"),
-              th("Actions")
+              th("Description")
             )
           ),
           tbody(
             each(currentServers, server -> tr(
               td(server.getName()),
               td(
-                img(attrs(".rounded-circle"))
-                  .withSrc(server.getIcon())
-                  .withAlt(server.getName() + " logo")
-                  .withStyle("width: 32px; height: 32px;")
+                img(attrs(".rounded-circle")).withSrc(server.getIcon()).withAlt(server.getName() + " logo").withStyle("width: 32px; height: 32px;")
               ),
-              td(server.getDescription() != null ? server.getDescription() : ""),
-              td(
-                form(
-                  attrs(".d-inline"),
-                  button(attrs(".btn.btn-sm.btn-danger"), "Remove")
-                    .attr("type", "submit")
-                    .attr("onclick", "return confirm('Are you sure you want to remove this MCP server?')")
-                ).attr("method", "post")
-                  .attr("action", "/applications/" + app.getId() + "/mcp-servers/" + server.getName() + "/remove")
-              )
+              td(server.getDescription() != null ? server.getDescription() : "")
             ))
           )
         ) :
-        div(attrs(".alert.alert-info"), "No MCP servers associated with this application."),
-
-      h4(attrs(".mt-4"), "Add MCP Server"),
-      availableServers != null && !availableServers.isEmpty() ?
-        form(
-          attrs(".row.g-3.align-items-end"),
-          div(
-            attrs(".col-auto"),
-            label(attrs(".form-label"), "Select MCP Server").attr("for", "mcpServerName"),
-            select(attrs(".form-select"))
-              .attr("id", "mcpServerName")
-              .attr("name", "mcpServerName")
-              .attr("required", "required")
-              .with(
-                option("Choose...").attr("value", ""),
-                each(renderAvailableServerOptions(availableServers))
-              )
-          ),
-          div(
-            attrs(".col-auto"),
-            button(attrs(".btn.btn-primary"), "Add Server")
-              .attr("type", "submit")
-          )
-        ).attr("method", "post")
-          .attr("action", "/applications/" + app.getId() + "/mcp-servers/add") :
-        div(attrs(".alert.alert-warning"), "No MCP servers available to add.")
+        div(attrs(".alert.alert-info"), "No MCP servers associated with this application.")
     );
-  }
-
-  private DomContent[] renderAvailableModelOptions(List<ModelResponse> models) {
-    // Split into favorites and non-favorites, both sorted alphabetically
-    List<ModelResponse> favorites = models.stream()
-        .filter(ModelResponse::isFavorite)
-        .sorted((a, b) -> a.getProvider().compareToIgnoreCase(b.getProvider()))
-        .collect(java.util.stream.Collectors.toList());
-    
-    List<ModelResponse> others = models.stream()
-        .filter(m -> !m.isFavorite())
-        .sorted((a, b) -> a.getProvider().compareToIgnoreCase(b.getProvider()))
-        .collect(java.util.stream.Collectors.toList());
-    
-    java.util.List<DomContent> options = new java.util.ArrayList<>();
-    
-    if (!favorites.isEmpty()) {
-      options.add(optgroup().attr("label", "Favorites")
-        .with(each(favorites, m ->
-          option(m.getProvider())
-            .attr("value", m.getProvider())
-        ))
-      );
-    }
-    
-    if (!others.isEmpty()) {
-      options.add(optgroup().attr("label", favorites.isEmpty() ? "All Models" : "All Others")
-        .with(each(others, m ->
-          option(m.getProvider())
-            .attr("value", m.getProvider())
-        ))
-      );
-    }
-    
-    return options.toArray(new DomContent[0]);
-  }
-
-  private DomContent[] renderAvailableAgentOptions(List<AgentResponse> agents) {
-    return agents.stream()
-        .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
-        .map(agent -> option(agent.getName() + " - " + (agent.getDescription() != null ? agent.getDescription() : ""))
-            .attr("value", agent.getName()))
-        .toArray(DomContent[]::new);
-  }
-
-  private DomContent[] renderAvailableServerOptions(List<McpServerResponse> servers) {
-    // Split into favorites and non-favorites, both sorted alphabetically
-    List<McpServerResponse> favorites = servers.stream()
-        .filter(McpServerResponse::isFavorite)
-        .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
-        .collect(java.util.stream.Collectors.toList());
-    
-    List<McpServerResponse> others = servers.stream()
-        .filter(s -> !s.isFavorite())
-        .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
-        .collect(java.util.stream.Collectors.toList());
-    
-    java.util.List<DomContent> options = new java.util.ArrayList<>();
-    
-    if (!favorites.isEmpty()) {
-      options.add(optgroup().attr("label", "Favorites")
-        .with(each(favorites, server ->
-          option(server.getName() + " - " + server.getDescription())
-            .attr("value", server.getName())
-        ))
-      );
-    }
-    
-    if (!others.isEmpty()) {
-      options.add(optgroup().attr("label", favorites.isEmpty() ? "All MCP Servers" : "All Others")
-        .with(each(others, server ->
-          option(server.getName() + " - " + server.getDescription())
-            .attr("value", server.getName())
-        ))
-      );
-    }
-    
-    return options.toArray(new DomContent[0]);
   }
 
 }

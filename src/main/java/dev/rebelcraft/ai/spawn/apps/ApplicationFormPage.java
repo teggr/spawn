@@ -48,6 +48,13 @@ public class ApplicationFormPage extends PageView {
       each(
         h1(isEdit ? "Edit Application" : "Create New Application"),
         error != null ? div(attrs(".alert.alert-danger"), error) : text(""),
+
+        // Top action bar with Save and Back
+        div(attrs(".d-flex.justify-content-end.mb-3"),
+            button(attrs(".btn.btn-primary.me-2"), "Save").attr("type", "submit").attr("form", "applicationForm"),
+            a(attrs(".btn.btn-secondary"), "Back").withHref("/applications")
+        ),
+
         form(
           attrs(".mt-3"),
           div(
@@ -68,7 +75,7 @@ public class ApplicationFormPage extends PageView {
             div(attrs(".d-flex.gap-2.mb-2"),
               select(attrs(".form-select")).attr("id", "modelDropdown").attr("name", "_modelDropdown").with(
                 option("Select a model...").attr("value", ""),
-                models != null ? each(renderModelOptions(models, selectedModelProviders)) : text("")
+                models != null ? each(renderModelOptions(models)) : text("")
               ),
               button(attrs(".btn.btn-secondary"), "Add").attr("type", "button").attr("onclick", "addModelFromDropdown()")
             ),
@@ -94,7 +101,7 @@ public class ApplicationFormPage extends PageView {
             div(attrs(".d-flex.gap-2.mb-2"),
               select(attrs(".form-select")).attr("id", "agentDropdown").attr("name", "_agentDropdown").with(
                 option("Select an agent...").attr("value", ""),
-                agents != null ? each(renderAgentOptions(agents, selectedAgentNames)) : text("")
+                agents != null ? each(renderAgentOptions(agents)) : text("")
               ),
               button(attrs(".btn.btn-secondary"), "Add").attr("type", "button").attr("onclick", "addAgentFromDropdown()")
             ),
@@ -111,34 +118,28 @@ public class ApplicationFormPage extends PageView {
                 ) : text("")
               )
             )
-          ),
-          div(
-            attrs(".mt-3"),
-            button(attrs(".btn.btn-primary.me-2"), "Save")
-              .attr("type", "submit"),
-            a(attrs(".btn.btn-secondary"), "Cancel").withHref("/applications")
           )
-        ).attr("method", "post")
+        ).attr("id", "applicationForm").attr("method", "post")
           .attr("action", isEdit ? "/applications/" + applicationId : "/applications")
-          .with(
-            script(clientJs)
-          )
-      )
-    );
-  }
+           .with(
+             script(clientJs)
+           )
+       )
+     );
+   }
 
-  private DomContent[] renderModelOptions(List<ModelResponse> models, List<String> selectedProviders) {
+  private DomContent[] renderModelOptions(List<ModelResponse> models) {
     // Split into favorites and non-favorites, both sorted alphabetically
     List<ModelResponse> favorites = models.stream()
         .filter(ModelResponse::isFavorite)
         .sorted((a, b) -> a.getProvider().compareToIgnoreCase(b.getProvider()))
-        .collect(java.util.stream.Collectors.toList());
-    
+        .toList();
+
     List<ModelResponse> others = models.stream()
         .filter(m -> !m.isFavorite())
         .sorted((a, b) -> a.getProvider().compareToIgnoreCase(b.getProvider()))
-        .collect(java.util.stream.Collectors.toList());
-    
+        .toList();
+
     java.util.List<DomContent> options = new java.util.ArrayList<>();
     
     if (!favorites.isEmpty()) {
@@ -162,16 +163,16 @@ public class ApplicationFormPage extends PageView {
     return options.toArray(new DomContent[0]);
   }
 
-  private DomContent[] renderAgentOptions(List<AgentResponse> agents, List<String> selectedNames) {
-    // Sort alphabetically
+  private DomContent[] renderAgentOptions(List<AgentResponse> agents) {
+     // Sort alphabetically
     List<AgentResponse> sortedAgents = agents.stream()
         .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
-        .collect(java.util.stream.Collectors.toList());
-    
-    return sortedAgents.stream()
-        .map(a -> option(a.getName())
-            .attr("value", a.getName()))
-        .toArray(DomContent[]::new);
-  }
+        .toList();
+
+     return sortedAgents.stream()
+         .map(a -> option(a.getName())
+             .attr("value", a.getName()))
+         .toArray(DomContent[]::new);
+   }
 
 }

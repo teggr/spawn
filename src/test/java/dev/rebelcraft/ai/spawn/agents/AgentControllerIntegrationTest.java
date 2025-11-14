@@ -32,7 +32,12 @@ class AgentControllerIntegrationTest {
     void shouldGetNewAgentForm() throws Exception {
         mockMvc.perform(get("/agents/new"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Create Agent - Spawn</title>")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Create Agent - Spawn</title>")))
+                // Top action buttons should be present
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Save")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Back")))
+                // Free-text MCP input should NOT be present
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Other MCP name"))));
     }
 
     @Test
@@ -51,11 +56,13 @@ class AgentControllerIntegrationTest {
                 .andExpect(status().is3xxRedirection());
 
         // get created agent id
-        Long id = agentRepository.findAll().stream().filter(a -> "AgentWithUnknownMcp".equals(a.getName())).findFirst().get().getId();
+        Long id = agentRepository.findAll().stream().filter(a -> "AgentWithUnknownMcp".equals(a.getName())).findFirst().orElseThrow().getId();
 
         mockMvc.perform(get("/agents/" + id))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Unknown MCP")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Unknown MCP")))
+                // The detail page should no longer have inline add/remove forms for MCPs
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Select a server..."))));
     }
 
     @Test
@@ -65,7 +72,7 @@ class AgentControllerIntegrationTest {
                 .param("systemPrompt", "Prompt"))
                 .andExpect(status().is3xxRedirection());
 
-        Long id = agentRepository.findAll().stream().filter(a -> "ToEdit".equals(a.getName())).findFirst().get().getId();
+        Long id = agentRepository.findAll().stream().filter(a -> "ToEdit".equals(a.getName())).findFirst().orElseThrow().getId();
 
         mockMvc.perform(post("/agents/" + id)
                 .param("name", "EditedName")
@@ -84,7 +91,7 @@ class AgentControllerIntegrationTest {
                 .param("systemPrompt", "Prompt"))
                 .andExpect(status().is3xxRedirection());
 
-        Long id = agentRepository.findAll().stream().filter(a -> "ToDelete".equals(a.getName())).findFirst().get().getId();
+        Long id = agentRepository.findAll().stream().filter(a -> "ToDelete".equals(a.getName())).findFirst().orElseThrow().getId();
 
         mockMvc.perform(post("/agents/" + id + "/delete"))
                 .andExpect(status().is3xxRedirection());

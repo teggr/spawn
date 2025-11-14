@@ -167,7 +167,10 @@ class ApplicationControllerIntegrationTest {
                 .andExpect(model().attributeExists("selectedModelProviders"))
                 .andExpect(model().attributeExists("selectedAgentNames"))
                 .andExpect(model().attributeExists("models"))
-                .andExpect(model().attributeExists("agents"));
+                .andExpect(model().attributeExists("agents"))
+                // The edit form should contain top Save/Back action buttons
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Save")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Back")));
     }
 
     @Test
@@ -189,6 +192,10 @@ class ApplicationControllerIntegrationTest {
                 .andExpect(model().attributeExists("application"))
                 .andExpect(model().attributeExists("availableModels"))
                 .andExpect(model().attributeExists("availableAgents"))
-                .andExpect(model().attributeExists("availableServers"));
+                .andExpect(model().attributeExists("availableServers"))
+                // The detail page should not contain inline add/remove forms for associations
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Add Model"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Add Agent"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Add Server"))));
     }
 }
