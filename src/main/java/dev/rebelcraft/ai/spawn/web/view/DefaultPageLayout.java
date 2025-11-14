@@ -11,6 +11,7 @@ public class DefaultPageLayout {
   public static final String ACTIVATE_MODELS_NAV_LINK = "models";
   public static final String ACTIVATE_MCP_NAV_LINK = "mcp";
   public static final String ACTIVATE_APPS_NAV_LINK = "apps";
+  public static final String ACTIVATE_AGENTS_NAV_LINK = "agents";
 
   public static DomContent createPage(String title, String activeNavLink, DomContent bodyContent) {
     return html(
@@ -43,6 +44,7 @@ public class DefaultPageLayout {
           attrs(".navbar-nav"),
           a(attrs(ACTIVATE_MODELS_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Models").withHref("/models"),
           a(attrs(ACTIVATE_MCP_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "MCP Servers").withHref("/mcp-servers"),
+          a(attrs(ACTIVATE_AGENTS_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Agents").withHref("/agents"),
           a(attrs(ACTIVATE_APPS_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Applications").withHref("/applications")
         )
       )

@@ -78,6 +78,26 @@ The application provides a web-based user interface with the following pages:
   - Set of MCP server names (references to CSV)
   - Creation timestamp
 
+### Agents (`/agents`)
+- New domain: Agents represent tailored expertise for specific tasks.
+- Each Agent stores:
+  - `name` (required)
+  - `description` (optional)
+  - `systemPrompt` (long text, stored as CLOB)
+  - `createdAt` timestamp
+  - A per-agent persisted list of MCP server names (free-form strings) stored in `agent_mcp_servers` table
+- Endpoints (server-rendered HTML):
+  - `GET /agents` — List all agents
+  - `GET /agents/new` — Show creation form (dropdown of known MCP servers + "Other" free-form add)
+  - `POST /agents` — Create agent (redirect on success)
+  - `GET /agents/{id}` — Detail page showing full system prompt and attached MCP names (unknown names highlighted with a warning badge)
+  - `GET /agents/{id}/edit` — Edit form (pre-filled)
+  - `POST /agents/{id}` — Update agent
+  - `POST /agents/{id}/delete` — Delete agent
+  - `POST /agents/{id}/mcp-servers/add` — Attach an MCP name to an agent
+  - `POST /agents/{id}/mcp-servers/{mcpName}/remove` — Remove an MCP name from an agent
+- MCP servers list used for dropdown is loaded from CSV (read-only). Agents accept free-form MCP names; UI highlights names that don't match any known MCP server.
+
 ## Data Architecture
 
 ### CSV-Based Configuration (Read-Only)
@@ -99,6 +119,13 @@ The application provides a web-based user interface with the following pages:
 - Model provider name (validated against CSV)
 - Collection of MCP server names (validated against CSV)
 - Creation timestamp
+
+**Agents** are stored in the H2 database:
+- Agent name
+- Description
+- System prompt
+- Creation timestamp
+- Collection of MCP server names (free-form, validated against CSV)
 
 ## Example Workflow
 
@@ -130,6 +157,20 @@ Using the web UI:
      - Application details (ID, name, model provider, created date)
      - Associated MCP servers with icons and descriptions
      - Option to add/remove servers
+
+6. **Create an Agent**
+   - Navigate to `http://localhost:8080/agents`
+   - Click "Create New Agent"
+   - Enter agent name: "Code Reviewer"
+   - Optionally, enter a description
+   - Enter the system prompt
+   - Select MCP servers from the dropdown
+   - Click "Save"
+
+7. **View Agent Details**
+   - Click "View" on your agent
+   - See the full system prompt and attached MCP servers
+   - Option to edit or delete the agent
 
 ## Testing
 
@@ -173,6 +214,16 @@ src/
 │   │   │   ├── McpServerService.java      # CSV loader
 │   │   │   ├── McpServerResponse.java     # DTO
 │   │   │   └── McpServersListPage.java    # J2HTML view
+│   │   ├── agents/                        # Agents domain
+│   │   │   ├── Agent.java                 # JPA entity
+│   │   │   ├── AgentController.java       # Web controller
+│   │   │   ├── AgentService.java          # Business logic
+│   │   │   ├── AgentRepository.java       # Spring Data repository
+│   │   │   ├── AgentRequest.java          # DTO
+│   │   │   ├── AgentResponse.java         # DTO
+│   │   │   ├── AgentFormPage.java         # J2HTML view
+│   │   │   ├── AgentDetailPage.java       # J2HTML view
+│   │   │   └── AgentsListPage.java        # J2HTML view
 │   │   ├── web/                           # Cross-cutting web concerns
 │   │   │   ├── IndexController.java       # Home page
 │   │   │   └── view/                      # Shared view components
@@ -197,6 +248,10 @@ The application uses an in-memory H2 database with the following schema:
   - id, name, model_provider, created_at
 - **application_mcp_servers**: Stores MCP server names for each application
   - application_id, mcp_server_name
+- **agents**: Stores agent configurations
+  - id, name, description, system_prompt, created_at
+- **agent_mcp_servers**: Stores MCP server names for each agent
+  - agent_id, mcp_server_name
 
 **Note**: Models and MCP servers are NOT stored in the database. They are loaded from CSV files at startup.
 
