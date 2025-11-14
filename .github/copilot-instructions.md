@@ -119,14 +119,6 @@ mvn test -Dtest=ClassName#method   # Run specific test method
 - Tests verify HTML responses and page rendering
 - See unit-testing agent for detailed testing guidance
 
-## Docker Integration
-
-- **DockerTemplate** class provides generic Docker operations
-- Configuration via `DockerConfiguration` and `DockerConfigurationProperties`
-- Operations: list containers, run containers, stop containers, remove containers
-- Configurable Docker host, TLS settings, and timeouts
-- Used for managing containerized AI applications
-
 ## Database
 
 - **H2 in-memory database** is used for development and testing

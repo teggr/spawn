@@ -1,28 +1,31 @@
 package dev.rebelcraft.ai.spawn.mcp;
 
-import dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout;
+import dev.rebelcraft.ai.spawn.web.view.PageView;
 import j2html.tags.ContainerTag;
+import j2html.tags.DomContent;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.View;
 
 import java.util.List;
 import java.util.Map;
 
+import static dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout.*;
+import static dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout.ACTIVATE_MCP_NAV_LINK;
 import static j2html.TagCreator.*;
 
 @Component
-public class McpServersListPage implements View {
+public class McpServersListPage extends PageView {
 
   @Override
-  public void render(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
+  protected DomContent renderPage(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) {
+
     @SuppressWarnings("unchecked")
     List<McpServerResponse> servers = (List<McpServerResponse>) model.get("servers");
 
-    DefaultPageLayout.createPage(
+    return createPage(
       "MCP Servers - Spawn",
+      ACTIVATE_MCP_NAV_LINK,
       each(
         div(
           attrs(".container.mt-4"),
@@ -34,7 +37,7 @@ public class McpServersListPage implements View {
           serversTable(servers)
         )
       )
-    ).render(response.getWriter());
+    );
   }
 
   private ContainerTag serversTable(List<McpServerResponse> servers) {
@@ -78,8 +81,4 @@ public class McpServersListPage implements View {
     );
   }
 
-  @Override
-  public String getContentType() {
-    return MediaType.TEXT_HTML_VALUE;
-  }
 }

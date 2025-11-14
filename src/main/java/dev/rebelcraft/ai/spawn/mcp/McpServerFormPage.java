@@ -1,21 +1,22 @@
 package dev.rebelcraft.ai.spawn.mcp;
 
-import dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout;
+import dev.rebelcraft.ai.spawn.web.view.PageView;
+import j2html.tags.DomContent;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.View;
 
 import java.util.Map;
 
+import static dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout.*;
 import static j2html.TagCreator.*;
 
 @Component
-public class McpServerFormPage implements View {
+public class McpServerFormPage extends PageView {
 
   @Override
-  public void render(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
+  protected DomContent renderPage(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) {
+
     String serverId = (String) model.get("serverId");
     String name = (String) model.get("name");
     String url = (String) model.get("url");
@@ -24,8 +25,9 @@ public class McpServerFormPage implements View {
 
     boolean isEdit = serverId != null;
 
-    DefaultPageLayout.createPage(
+    return createPage(
       (isEdit ? "Edit MCP Server" : "Create MCP Server") + " - Spawn",
+      ACTIVATE_MCP_NAV_LINK,
       each(
         div(
           attrs(".container.mt-4"),
@@ -73,11 +75,7 @@ public class McpServerFormPage implements View {
             .attr("action", isEdit ? "/mcp-servers/" + serverId : "/mcp-servers")
         )
       )
-    ).render(response.getWriter());
+    );
   }
 
-  @Override
-  public String getContentType() {
-    return MediaType.TEXT_HTML_VALUE;
-  }
 }

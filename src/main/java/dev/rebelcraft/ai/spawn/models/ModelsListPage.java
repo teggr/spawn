@@ -1,28 +1,29 @@
 package dev.rebelcraft.ai.spawn.models;
 
-import dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout;
+import dev.rebelcraft.ai.spawn.web.view.PageView;
 import j2html.tags.ContainerTag;
+import j2html.tags.DomContent;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.View;
 
 import java.util.List;
 import java.util.Map;
 
+import static dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout.*;
 import static j2html.TagCreator.*;
 
 @Component
-public class ModelsListPage implements View {
+public class ModelsListPage extends PageView {
 
   @Override
-  public void render(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
+  protected DomContent renderPage(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) {
     @SuppressWarnings("unchecked")
     List<ModelResponse> models = (List<ModelResponse>) model.get("models");
 
-    DefaultPageLayout.createPage(
+    return createPage(
       "Models - Spawn",
+      ACTIVATE_MODELS_NAV_LINK,
       each(
         div(
           attrs(".container.mt-4"),
@@ -34,7 +35,7 @@ public class ModelsListPage implements View {
           modelsTable(models)
         )
       )
-    ).render(response.getWriter());
+    );
 
   }
 
@@ -80,8 +81,4 @@ public class ModelsListPage implements View {
     );
   }
 
-  @Override
-  public String getContentType() {
-    return MediaType.TEXT_HTML_VALUE;
-  }
 }

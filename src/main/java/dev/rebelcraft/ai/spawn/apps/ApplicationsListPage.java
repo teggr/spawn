@@ -1,28 +1,30 @@
 package dev.rebelcraft.ai.spawn.apps;
 
-import dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout;
+import dev.rebelcraft.ai.spawn.web.view.PageView;
 import j2html.tags.ContainerTag;
+import j2html.tags.DomContent;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.View;
 
 import java.util.List;
 import java.util.Map;
 
+import static dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout.*;
 import static j2html.TagCreator.*;
 
 @Component
-public class ApplicationsListPage implements View {
+public class ApplicationsListPage extends PageView {
 
   @Override
-  public void render(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
-    @SuppressWarnings("unchecked")
+  protected DomContent renderPage(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) {
+
+      @SuppressWarnings("unchecked")
     List<ApplicationResponse> applications = (List<ApplicationResponse>) model.get("applications");
 
-    DefaultPageLayout.createPage(
+    return createPage(
       "Applications - Spawn",
+      ACTIVATE_APPS_NAV_LINK,
       each(
         div(
           attrs(".container.mt-4"),
@@ -34,7 +36,7 @@ public class ApplicationsListPage implements View {
           applicationsTable(applications)
         )
       )
-    ).render(response.getWriter());
+    );
   }
 
   private ContainerTag applicationsTable(List<ApplicationResponse> applications) {
@@ -82,8 +84,4 @@ public class ApplicationsListPage implements View {
     );
   }
 
-  @Override
-  public String getContentType() {
-    return MediaType.TEXT_HTML_VALUE;
-  }
 }

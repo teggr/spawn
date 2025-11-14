@@ -1,23 +1,23 @@
 package dev.rebelcraft.ai.spawn.web.view;
 
+import j2html.tags.DomContent;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.View;
 
 import java.util.Map;
 
 import static j2html.TagCreator.*;
 
 @Component
-public class IndexPage implements View {
+public class IndexPage extends PageView {
 
   @Override
-  public void render(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
+  protected DomContent renderPage(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) {
 
-    DefaultPageLayout.createPage(
+    return DefaultPageLayout.createPage(
       "Spawn - AI Application Builder",
+      DefaultPageLayout.NO_ACTIVE_NAV_LINK,
       each(
         h1("Welcome to Spawn"),
         p("Application for building AI capable applications on the fly with UI, models and MCP servers."),
@@ -31,7 +31,7 @@ public class IndexPage implements View {
                 attrs(".card-body"),
                 h5(attrs(".card-title"), "Models"),
                 p(attrs(".card-text"), "Manage AI models like GPT-4, Claude, etc."),
-                a(attrs(".btn.btn-primary"), "Manage Models").withHref("/models")
+                a(attrs(".btn.btn-primary"), "Browse Models").withHref("/models")
               )
             )
           ),
@@ -43,7 +43,7 @@ public class IndexPage implements View {
                 attrs(".card-body"),
                 h5(attrs(".card-title"), "MCP Servers"),
                 p(attrs(".card-text"), "Configure MCP servers for your applications."),
-                a(attrs(".btn.btn-primary"), "Manage MCP Servers").withHref("/mcp-servers")
+                a(attrs(".btn.btn-primary"), "Browse MCP Servers").withHref("/mcp-servers")
               )
             )
           ),
@@ -61,12 +61,8 @@ public class IndexPage implements View {
           )
         )
       )
-    ).render(response.getWriter());
+    );
 
   }
 
-  @Override
-  public String getContentType() {
-    return MediaType.TEXT_HTML_VALUE;
-  }
 }

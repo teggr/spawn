@@ -1,23 +1,25 @@
 package dev.rebelcraft.ai.spawn.apps;
 
 import dev.rebelcraft.ai.spawn.models.ModelResponse;
-import dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout;
+import dev.rebelcraft.ai.spawn.web.view.PageView;
+import j2html.tags.DomContent;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.View;
 
 import java.util.List;
 import java.util.Map;
 
+import static dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout.*;
+import static dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout.createPage;
 import static j2html.TagCreator.*;
 
 @Component
-public class ApplicationFormPage implements View {
+public class ApplicationFormPage extends PageView {
 
   @Override
-  public void render(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
+  protected DomContent renderPage(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) {
+
     String applicationId = (String) model.get("applicationId");
     String name = (String) model.get("name");
     String modelProvider = (String) model.get("modelProvider");
@@ -27,8 +29,9 @@ public class ApplicationFormPage implements View {
 
     boolean isEdit = applicationId != null;
 
-    DefaultPageLayout.createPage(
+    return createPage(
       (isEdit ? "Edit Application" : "Create Application") + " - Spawn",
+      ACTIVATE_APPS_NAV_LINK,
       each(
         h1(isEdit ? "Edit Application" : "Create New Application"),
         error != null ? div(attrs(".alert.alert-danger"), error) : text(""),
@@ -68,11 +71,7 @@ public class ApplicationFormPage implements View {
         ).attr("method", "post")
           .attr("action", isEdit ? "/applications/" + applicationId : "/applications")
       )
-    ).render(response.getWriter());
+    );
   }
 
-  @Override
-  public String getContentType() {
-    return MediaType.TEXT_HTML_VALUE;
-  }
 }
