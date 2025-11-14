@@ -35,6 +35,13 @@ public class ApplicationFormPage extends PageView {
 
     boolean isEdit = applicationId != null;
 
+    // Small, safe inline JS that manages the client-side lists. Keep it concise to avoid quoting issues.
+    String clientJs = "function addHiddenInput(name,value){var i=document.createElement('input');i.type='hidden';i.name=name;i.value=value;return i;}" +
+            "function addModelToList(val){if(!val) return;var c=document.getElementById('modelListContainer');var item=document.createElement('div');item.className='d-flex align-items-center gap-2 mb-1';var span=document.createElement('span');span.innerText=val;var btn=document.createElement('button');btn.className='btn btn-sm btn-outline-danger';btn.type='button';btn.innerText='Remove';btn.onclick=function(){c.removeChild(item);};item.appendChild(span);item.appendChild(btn);item.appendChild(addHiddenInput('modelProviders',val));c.appendChild(item);}" +
+            "function addModelFromDropdown(){var sel=document.getElementById('modelDropdown'); if(sel){addModelToList(sel.value);} }" +
+            "function addAgentToList(val){if(!val) return;var c=document.getElementById('agentListContainer');var item=document.createElement('div');item.className='d-flex align-items-center gap-2 mb-1';var span=document.createElement('span');span.innerText=val;var btn=document.createElement('button');btn.className='btn btn-sm btn-outline-danger';btn.type='button';btn.innerText='Remove';btn.onclick=function(){c.removeChild(item);};item.appendChild(span);item.appendChild(btn);item.appendChild(addHiddenInput('agentNames',val));c.appendChild(item);}" +
+            "function addAgentFromDropdown(){var sel=document.getElementById('agentDropdown'); if(sel){addAgentToList(sel.value);} }";
+
     return createPage(
       (isEdit ? "Edit Application" : "Create Application") + " - Spawn",
       ACTIVATE_APPS_NAV_LINK,
@@ -55,27 +62,55 @@ public class ApplicationFormPage extends PageView {
           ),
           div(
             attrs(".mb-3"),
-            label(attrs(".form-label"), "Model Providers (select multiple)").attr("for", "modelProviders"),
-            select(attrs(".form-select"))
-              .attr("id", "modelProviders")
-              .attr("name", "modelProviders")
-              .attr("multiple", "multiple")
-              .attr("size", "5")
-              .with(
+            label(attrs(".form-label"), "Model Providers"),
+            
+            // Dropdown + Add button
+            div(attrs(".d-flex.gap-2.mb-2"),
+              select(attrs(".form-select")).attr("id", "modelDropdown").attr("name", "_modelDropdown").with(
+                option("Select a model...").attr("value", ""),
                 models != null ? each(renderModelOptions(models, selectedModelProviders)) : text("")
+              ),
+              button(attrs(".btn.btn-secondary"), "Add").attr("type", "button").attr("onclick", "addModelFromDropdown()")
+            ),
+            
+            // Visible list container (pre-populate existing selections)
+            div(attrs(".mt-3"),
+              div().attr("id", "modelListContainer").with(
+                selectedModelProviders != null ? each(selectedModelProviders, p ->
+                  div(attrs(".d-flex.align-items-center.gap-2.mb-1"),
+                    span(p),
+                    button(attrs(".btn.btn-sm.btn-outline-danger"), "Remove").attr("type", "button").attr("onclick", "(function(btn){var item = btn.parentElement; item.parentElement.removeChild(item);})(this);"),
+                    input().attr("type", "hidden").attr("name", "modelProviders").attr("value", p)
+                  )
+                ) : text("")
               )
+            )
           ),
           div(
             attrs(".mb-3"),
-            label(attrs(".form-label"), "Agents (select multiple)").attr("for", "agentNames"),
-            select(attrs(".form-select"))
-              .attr("id", "agentNames")
-              .attr("name", "agentNames")
-              .attr("multiple", "multiple")
-              .attr("size", "5")
-              .with(
+            label(attrs(".form-label"), "Agents"),
+            
+            // Dropdown + Add button
+            div(attrs(".d-flex.gap-2.mb-2"),
+              select(attrs(".form-select")).attr("id", "agentDropdown").attr("name", "_agentDropdown").with(
+                option("Select an agent...").attr("value", ""),
                 agents != null ? each(renderAgentOptions(agents, selectedAgentNames)) : text("")
+              ),
+              button(attrs(".btn.btn-secondary"), "Add").attr("type", "button").attr("onclick", "addAgentFromDropdown()")
+            ),
+            
+            // Visible list container (pre-populate existing selections)
+            div(attrs(".mt-3"),
+              div().attr("id", "agentListContainer").with(
+                selectedAgentNames != null ? each(selectedAgentNames, n ->
+                  div(attrs(".d-flex.align-items-center.gap-2.mb-1"),
+                    span(n),
+                    button(attrs(".btn.btn-sm.btn-outline-danger"), "Remove").attr("type", "button").attr("onclick", "(function(btn){var item = btn.parentElement; item.parentElement.removeChild(item);})(this);"),
+                    input().attr("type", "hidden").attr("name", "agentNames").attr("value", n)
+                  )
+                ) : text("")
               )
+            )
           ),
           div(
             attrs(".mt-3"),
@@ -85,6 +120,9 @@ public class ApplicationFormPage extends PageView {
           )
         ).attr("method", "post")
           .attr("action", isEdit ? "/applications/" + applicationId : "/applications")
+          .with(
+            script(clientJs)
+          )
       )
     );
   }
@@ -108,7 +146,6 @@ public class ApplicationFormPage extends PageView {
         .with(each(favorites, m ->
           option(m.getProvider())
             .attr("value", m.getProvider())
-            .condAttr(selectedProviders != null && selectedProviders.contains(m.getProvider()), "selected", "selected")
         ))
       );
     }
@@ -118,7 +155,6 @@ public class ApplicationFormPage extends PageView {
         .with(each(others, m ->
           option(m.getProvider())
             .attr("value", m.getProvider())
-            .condAttr(selectedProviders != null && selectedProviders.contains(m.getProvider()), "selected", "selected")
         ))
       );
     }
@@ -134,8 +170,7 @@ public class ApplicationFormPage extends PageView {
     
     return sortedAgents.stream()
         .map(a -> option(a.getName())
-            .attr("value", a.getName())
-            .condAttr(selectedNames != null && selectedNames.contains(a.getName()), "selected", "selected"))
+            .attr("value", a.getName()))
         .toArray(DomContent[]::new);
   }
 
