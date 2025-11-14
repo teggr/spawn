@@ -55,11 +55,7 @@ public class ApplicationFormPage extends PageView {
               .attr("name", "modelProvider")
               .with(
                 option("Select a model provider...").attr("value", "").condAttr(modelProvider == null || modelProvider.isEmpty(), "selected", "selected"),
-                models != null ? each(models, m ->
-                  option(m.getProvider())
-                    .attr("value", m.getProvider())
-                    .condAttr(modelProvider != null && modelProvider.equals(m.getProvider()), "selected", "selected")
-                ) : text("")
+                models != null ? each(renderModelOptions(models, modelProvider)) : text("")
               )
           ),
           div(
@@ -72,6 +68,43 @@ public class ApplicationFormPage extends PageView {
           .attr("action", isEdit ? "/applications/" + applicationId : "/applications")
       )
     );
+  }
+
+  private DomContent[] renderModelOptions(List<ModelResponse> models, String selectedProvider) {
+    // Split into favorites and non-favorites, both sorted alphabetically
+    List<ModelResponse> favorites = models.stream()
+        .filter(ModelResponse::isFavorite)
+        .sorted((a, b) -> a.getProvider().compareToIgnoreCase(b.getProvider()))
+        .collect(java.util.stream.Collectors.toList());
+    
+    List<ModelResponse> others = models.stream()
+        .filter(m -> !m.isFavorite())
+        .sorted((a, b) -> a.getProvider().compareToIgnoreCase(b.getProvider()))
+        .collect(java.util.stream.Collectors.toList());
+    
+    java.util.List<DomContent> options = new java.util.ArrayList<>();
+    
+    if (!favorites.isEmpty()) {
+      options.add(optgroup().attr("label", "Favorites")
+        .with(each(favorites, m ->
+          option(m.getProvider())
+            .attr("value", m.getProvider())
+            .condAttr(selectedProvider != null && selectedProvider.equals(m.getProvider()), "selected", "selected")
+        ))
+      );
+    }
+    
+    if (!others.isEmpty()) {
+      options.add(optgroup().attr("label", favorites.isEmpty() ? "All Models" : "All Others")
+        .with(each(others, m ->
+          option(m.getProvider())
+            .attr("value", m.getProvider())
+            .condAttr(selectedProvider != null && selectedProvider.equals(m.getProvider()), "selected", "selected")
+        ))
+      );
+    }
+    
+    return options.toArray(new DomContent[0]);
   }
 
 }

@@ -109,10 +109,7 @@ public class ApplicationDetailPage extends PageView {
               .attr("required", "required")
               .with(
                 option("Choose...").attr("value", ""),
-                each(availableServers, server ->
-                  option(server.getName() + " - " + server.getDescription())
-                    .attr("value", server.getName())
-                )
+                each(renderAvailableServerOptions(availableServers))
               )
           ),
           div(
@@ -124,6 +121,41 @@ public class ApplicationDetailPage extends PageView {
           .attr("action", "/applications/" + app.getId() + "/mcp-servers/add") :
         div(attrs(".alert.alert-warning"), "No MCP servers available to add.")
     );
+  }
+
+  private DomContent[] renderAvailableServerOptions(List<McpServerResponse> servers) {
+    // Split into favorites and non-favorites, both sorted alphabetically
+    List<McpServerResponse> favorites = servers.stream()
+        .filter(McpServerResponse::isFavorite)
+        .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
+        .collect(java.util.stream.Collectors.toList());
+    
+    List<McpServerResponse> others = servers.stream()
+        .filter(s -> !s.isFavorite())
+        .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
+        .collect(java.util.stream.Collectors.toList());
+    
+    java.util.List<DomContent> options = new java.util.ArrayList<>();
+    
+    if (!favorites.isEmpty()) {
+      options.add(optgroup().attr("label", "Favorites")
+        .with(each(favorites, server ->
+          option(server.getName() + " - " + server.getDescription())
+            .attr("value", server.getName())
+        ))
+      );
+    }
+    
+    if (!others.isEmpty()) {
+      options.add(optgroup().attr("label", favorites.isEmpty() ? "All MCP Servers" : "All Others")
+        .with(each(others, server ->
+          option(server.getName() + " - " + server.getDescription())
+            .attr("value", server.getName())
+        ))
+      );
+    }
+    
+    return options.toArray(new DomContent[0]);
   }
 
 }

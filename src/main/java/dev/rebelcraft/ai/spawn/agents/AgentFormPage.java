@@ -72,7 +72,7 @@ public class AgentFormPage extends PageView {
                                         div(attrs(".d-flex.gap-2.mb-2"),
                                                 select(attrs(".form-select")).attr("id", "mcpDropdown").attr("name", "_mcpDropdown").with(
                                                         option("Select a server...").attr("value", ""),
-                                                        mcpServers != null ? each(mcpServers, s -> option(s.getName()).attr("value", s.getName())) : text("")
+                                                        mcpServers != null ? each(renderMcpServerOptions(mcpServers)) : text("")
                                                 ),
                                                 button(attrs(".btn.btn-secondary"), "Add").attr("type", "button").attr("onclick", "addMcpFromDropdown()")
                                         ),
@@ -110,5 +110,34 @@ public class AgentFormPage extends PageView {
                                 )
                 )
         );
+    }
+
+    private DomContent[] renderMcpServerOptions(List<McpServerResponse> mcpServers) {
+        // Split into favorites and non-favorites, both sorted alphabetically
+        List<McpServerResponse> favorites = mcpServers.stream()
+            .filter(McpServerResponse::isFavorite)
+            .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
+            .collect(java.util.stream.Collectors.toList());
+        
+        List<McpServerResponse> others = mcpServers.stream()
+            .filter(s -> !s.isFavorite())
+            .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
+            .collect(java.util.stream.Collectors.toList());
+        
+        java.util.List<DomContent> options = new java.util.ArrayList<>();
+        
+        if (!favorites.isEmpty()) {
+            options.add(optgroup().attr("label", "Favorites")
+                .with(each(favorites, s -> option(s.getName()).attr("value", s.getName())))
+            );
+        }
+        
+        if (!others.isEmpty()) {
+            options.add(optgroup().attr("label", favorites.isEmpty() ? "All MCP Servers" : "All Others")
+                .with(each(others, s -> option(s.getName()).attr("value", s.getName())))
+            );
+        }
+        
+        return options.toArray(new DomContent[0]);
     }
 }
