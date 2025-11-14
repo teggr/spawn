@@ -11,9 +11,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * End-to-end test demonstrating the complete workflow through HTML UI:
- * 1. Create models (OpenAI)
+ * 1. View available models (loaded from CSV)
  * 2. Create MCP servers
- * 3. Create applications with models
+ * 3. Create applications with model providers
  * 4. Add MCP servers to applications via the UI
  */
 @SpringBootTest
@@ -25,13 +25,11 @@ class WorkflowIntegrationTest {
 
     @Test
     void shouldCompleteFullWorkflow() throws Exception {
-        // Step 1: Create a model (OpenAI)
-        mockMvc.perform(post("/models")
-                .param("name", "GPT-4")
-                .param("type", "OpenAI")
-                .param("description", "OpenAI GPT-4 Model for advanced AI tasks"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/models"));
+        // Step 1: Verify models are loaded from CSV
+        mockMvc.perform(get("/models"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Models - Spawn</title>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("OpenAI")));
 
         // Step 2: Create MCP servers
         mockMvc.perform(post("/mcp-servers")
@@ -48,34 +46,30 @@ class WorkflowIntegrationTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/mcp-servers"));
 
-        // Step 3: Create applications
+        // Step 3: Create applications with model providers from CSV
         mockMvc.perform(post("/applications")
                 .param("name", "AI Assistant App")
-                .param("modelId", "1"))
+                .param("modelProvider", "OpenAI"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/applications"));
 
         mockMvc.perform(post("/applications")
-                .param("name", "Code Analysis App"))
+                .param("name", "Code Analysis App")
+                .param("modelProvider", "Anthropic Claude"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/applications"));
 
-        // Step 4: Verify we can view the models list page
-        mockMvc.perform(get("/models"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Models - Spawn</title>")));
-
-        // Step 5: Verify we can view the applications list page
+        // Step 4: Verify we can view the applications list page
         mockMvc.perform(get("/applications"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Applications - Spawn</title>")));
 
-        // Step 6: Verify we can view the application detail page
+        // Step 5: Verify we can view the application detail page
         mockMvc.perform(get("/applications/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Application Details - Spawn</title>")));
 
-        // Step 7: Add MCP server to application
+        // Step 6: Add MCP server to application
         mockMvc.perform(post("/applications/1/mcp-servers/add")
                 .param("mcpServerId", "1"))
                 .andExpect(status().is3xxRedirection())

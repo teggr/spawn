@@ -52,8 +52,8 @@ public class ApplicationDetailPage implements View {
                             h5(attrs(".card-title"), "Details"),
                             p(strong("ID: "), text(app.getId().toString())),
                             p(strong("Name: "), text(app.getName())),
-                            p(strong("Model: "), text(app.getModel() != null ? 
-                                app.getModel().getName() + " (" + app.getModel().getType() + ")" : "None")),
+                            p(strong("Model Provider: "), text(app.getModel() != null ? 
+                                app.getModel().getProvider() : "None")),
                             p(strong("Created At: "), text(app.getCreatedAt() != null ? app.getCreatedAt().toString() : ""))
                         )
                     ),

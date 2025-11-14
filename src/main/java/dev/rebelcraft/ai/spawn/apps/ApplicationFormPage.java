@@ -20,7 +20,7 @@ public class ApplicationFormPage implements View {
     public void render(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
         String applicationId = (String) model.get("applicationId");
         String name = (String) model.get("name");
-        String modelId = (String) model.get("modelId");
+        String modelProvider = (String) model.get("modelProvider");
         String error = (String) model.get("error");
         @SuppressWarnings("unchecked")
         List<ModelResponse> models = (List<ModelResponse>) model.get("models");
@@ -55,16 +55,16 @@ public class ApplicationFormPage implements View {
                         ),
                         div(
                             attrs(".mb-3"),
-                            label(attrs(".form-label"), "Model").attr("for", "modelId"),
+                            label(attrs(".form-label"), "Model Provider").attr("for", "modelProvider"),
                             select(attrs(".form-select"))
-                                .attr("id", "modelId")
-                                .attr("name", "modelId")
+                                .attr("id", "modelProvider")
+                                .attr("name", "modelProvider")
                                 .with(
-                                    option("Select a model...").attr("value", "").condAttr(modelId == null || modelId.isEmpty(), "selected", "selected"),
+                                    option("Select a model provider...").attr("value", "").condAttr(modelProvider == null || modelProvider.isEmpty(), "selected", "selected"),
                                     models != null ? each(models, m -> 
-                                        option(m.getName() + " (" + m.getType() + ")")
-                                            .attr("value", m.getId().toString())
-                                            .condAttr(modelId != null && modelId.equals(m.getId().toString()), "selected", "selected")
+                                        option(m.getProvider())
+                                            .attr("value", m.getProvider())
+                                            .condAttr(modelProvider != null && modelProvider.equals(m.getProvider()), "selected", "selected")
                                     ) : text("")
                                 )
                         ),

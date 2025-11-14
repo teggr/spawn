@@ -1,7 +1,6 @@
 package dev.rebelcraft.ai.spawn.apps;
 
 import dev.rebelcraft.ai.spawn.mcp.McpServer;
-import dev.rebelcraft.ai.spawn.models.Model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
@@ -23,9 +22,8 @@ public class Application {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @ManyToOne
-    @JoinColumn(name = "model_id")
-    private Model model;
+    @Column(name = "model_provider")
+    private String modelProvider;
 
     @ManyToMany
     @JoinTable(
@@ -73,12 +71,12 @@ public class Application {
         this.createdAt = createdAt;
     }
 
-    public Model getModel() {
-        return model;
+    public String getModelProvider() {
+        return modelProvider;
     }
 
-    public void setModel(Model model) {
-        this.model = model;
+    public void setModelProvider(String modelProvider) {
+        this.modelProvider = modelProvider;
     }
 
     public Set<McpServer> getMcpServers() {

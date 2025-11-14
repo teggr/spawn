@@ -24,7 +24,7 @@ src/main/java/dev/rebelcraft/ai/spawn/
 ├── SpawnApplication.java          # Main Spring Boot application
 ├── apps/                          # Domain: applications (controllers, services, repos, dto, views)
 ├── mcp/                           # Domain: MCP servers (controllers, services, repos, dto, views)
-├── models/                        # Domain: models (controllers, services, repos, dto, views)
+├── models/                        # Domain: models (controllers, services, dto, views - READ-ONLY from CSV)
 ├── web/                           # Non-domain web concerns (IndexController, GlobalExceptionHandler, site-wide controllers)
 ├── utils/                          # Utilities (Docker integration helpers, templates, common helpers)
 ├── config/                        # Configuration classes (Docker, View)
@@ -33,35 +33,39 @@ src/main/java/dev/rebelcraft/ai/spawn/
 
 ### Layer Responsibilities
 
-- **Domain packages (apps / mcp / models)**: Each domain package contains its own controllers, services, repositories, DTOs, and view classes related to that domain. Keeping domain code together makes it easier to reason about features and tests.
+- **Domain packages (apps / mcp / models)**: Each domain package contains its own controllers, services, repositories, DTOs, and view classes related to that domain. Keeping domain code together makes it easier to reason about features and tests. **Note**: The `models` domain is read-only and loads data from CSV, so it has no repository or entity class.
 - **Web**: Cross-cutting web concerns that are not specific to a single domain (index, global exception handling, site-wide controllers) live in `web`.
 - **Utils**: Shared utilities, helper classes, and Docker helper wrappers that are reused across domains live in `utils`.
 - **Views**: J2HTML-based server-side rendered HTML pages may be colocated inside each domain package (e.g., `apps.view`) or kept in a shared `view` package if pages are shared across domains.
-- **Services**: Contain business logic and orchestrate repository operations and should remain focused and domain-local when possible.
-- **Repositories**: Provide data access using Spring Data JPA and live inside the corresponding domain package.
+- **Services**: Contain business logic and orchestrate repository operations and should remain focused and domain-local when possible. For read-only domains like models, services load data from external sources (e.g., CSV files).
+- **Repositories**: Provide data access using Spring Data JPA and live inside the corresponding domain package. Not applicable for read-only CSV-based domains.
 - **Config**: Configuration beans for Docker and view resolution.
 
 ## Core Domain Concepts
 
-1. **Models**: Represent AI models (e.g., OpenAI GPT-4, Claude) that can be used in applications
+1. **Models**: Represent AI model providers (e.g., OpenAI, Anthropic Claude, Azure OpenAI) loaded from a static CSV file (`src/main/resources/models/models.csv`). Models are **read-only** and include information about capabilities like multimodality, tools/functions support, streaming, retry, observability, built-in JSON, local deployment, and OpenAI API compatibility.
 2. **MCP Servers**: Model Context Protocol servers that provide additional capabilities (e.g., file system access, database operations)
-3. **Applications**: AI application configurations that combine a model with zero or more MCP servers
+3. **Applications**: AI application configurations that combine a model provider with zero or more MCP servers
 
 ### Entity Relationships
 
-- Application *many-to-one* Model (each application uses one model)
+- Application references Model by provider name (String) - not a database relationship
 - Application *many-to-many* McpServer (applications can have multiple MCP servers)
 
 ## API Design Patterns
 
 The application uses server-side rendered HTML with Spring MVC patterns:
 
+### Standard CRUD Resources (MCP Servers, Applications)
 - `GET /{resource}` - Display list page (returns HTML view)
 - `GET /{resource}/new` - Display creation form (returns HTML view)
 - `POST /{resource}` - Process form submission to create resource (redirect on success)
 - `GET /{resource}/{id}/edit` - Display edit form (returns HTML view)
 - `POST /{resource}/{id}` - Process form submission to update resource (redirect on success)
 - `POST /{resource}/{id}/delete` - Delete resource (redirect on success)
+
+### Read-Only Resources (Models)
+- `GET /models` - Display list page with models loaded from CSV (read-only, no create/edit/delete operations)
 
 All endpoints return HTML views rendered using J2HTML, not JSON responses.
 
@@ -127,14 +131,39 @@ mvn test -Dtest=ClassName#method   # Run specific test method
 
 - **H2 in-memory database** is used for development and testing
 - Database is automatically created on startup
+- Database stores: Applications, MCP Servers, and their relationships
+- **Models are NOT stored in the database** - they are loaded from `src/main/resources/models/models.csv`
 - Access H2 console at `http://localhost:8080/h2-console`
   - JDBC URL: `jdbc:h2:mem:spawndb`
   - Username: `sa`
   - Password: (empty)
 
+## Models Domain (CSV-Based, Read-Only)
+
+The models domain has a unique architecture compared to other domains:
+
+- **Data Source**: Models are loaded from `src/main/resources/models/models.csv` on application startup
+- **Read-Only**: No create, update, or delete operations - models can only be listed
+- **No Database**: Model data is not persisted in the database
+- **CSV Structure**: Provider, Multimodality, Tools/Functions, Streaming, Retry, Observability, Built-in JSON, Local, OpenAI API Compatible
+- **Model Class**: Plain Java POJO (not a JPA entity)
+- **No Repository**: ModelService reads directly from CSV file using ClassPathResource
+- **Controller**: Only has `GET /models` endpoint to list all models
+- **View**: ModelsListPage displays all model information in a read-only table
+- **Application Integration**: Applications reference models by provider name (String field), not by database ID
+
+### Working with Models
+
+When creating or editing applications:
+- The form displays a dropdown of all available model providers from the CSV
+- Applications store the provider name as a String field (`model_provider`)
+- ApplicationService validates that the selected provider exists in the CSV
+- ApplicationResponse includes the full ModelResponse object by looking up the provider name
+
 ## Development Workflow
 
 1. Create or modify entities and corresponding controllers, services, repositories, DTOs and views inside the appropriate domain package: `apps/`, `mcp/`, or `models/`.
+   - **Exception**: For `models/`, remember it's read-only and CSV-based with no repository or entity.
 2. Place cross-cutting web controllers and site-wide handlers in `web/` (e.g. `IndexController`, `GlobalExceptionHandler`).
 3. Add shared utilities and Docker helpers in `utils/` (or `docker/` if you prefer a dedicated docker package).
 4. Keep business logic in the service layer inside the domain packages.

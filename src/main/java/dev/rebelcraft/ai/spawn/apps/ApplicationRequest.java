@@ -7,7 +7,7 @@ public class ApplicationRequest {
     @NotBlank(message = "Application name is required")
     private String name;
 
-    private Long modelId;
+    private String modelProvider;
 
     // Constructors
     public ApplicationRequest() {
@@ -26,11 +26,11 @@ public class ApplicationRequest {
         this.name = name;
     }
 
-    public Long getModelId() {
-        return modelId;
+    public String getModelProvider() {
+        return modelProvider;
     }
 
-    public void setModelId(Long modelId) {
-        this.modelId = modelId;
+    public void setModelProvider(String modelProvider) {
+        this.modelProvider = modelProvider;
     }
 }

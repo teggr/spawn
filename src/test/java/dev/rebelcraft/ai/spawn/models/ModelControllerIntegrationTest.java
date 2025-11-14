@@ -17,25 +17,11 @@ class ModelControllerIntegrationTest {
     private MockMvc mockMvc;
 
     @Test
-    void shouldCreateModel() throws Exception {
-        mockMvc.perform(post("/models")
-                .param("name", "GPT-4")
-                .param("type", "OpenAI")
-                .param("description", "OpenAI GPT-4 Model"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/models"));
-    }
-
-    @Test
-    void shouldGetAllModels() throws Exception {
+    void shouldGetAllModelsFromCsv() throws Exception {
         mockMvc.perform(get("/models"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Models - Spawn</title>")));
-    }
-
-    @Test
-    void shouldReturnNotFoundWhenModelDoesNotExist() throws Exception {
-        mockMvc.perform(get("/models/999/edit"))
-                .andExpect(status().is4xxClientError());
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Models - Spawn</title>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Anthropic Claude")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("OpenAI")));
     }
 }
