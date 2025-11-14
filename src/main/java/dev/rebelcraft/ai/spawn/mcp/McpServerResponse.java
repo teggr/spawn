@@ -2,31 +2,21 @@ package dev.rebelcraft.ai.spawn.mcp;
 
 public class McpServerResponse {
 
-    private Long id;
     private String name;
-    private String url;
+    private String icon;
     private String description;
 
     // Constructors
     public McpServerResponse() {
     }
 
-    public McpServerResponse(Long id, String name, String url, String description) {
-        this.id = id;
+    public McpServerResponse(String name, String icon, String description) {
         this.name = name;
-        this.url = url;
+        this.icon = icon;
         this.description = description;
     }
 
     // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public String getName() {
         return name;
     }
@@ -35,12 +25,12 @@ public class McpServerResponse {
         this.name = name;
     }
 
-    public String getUrl() {
-        return url;
+    public String getIcon() {
+        return icon;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setIcon(String icon) {
+        this.icon = icon;
     }
 
     public String getDescription() {

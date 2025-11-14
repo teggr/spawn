@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * End-to-end test demonstrating the complete workflow through HTML UI:
  * 1. View available models (loaded from CSV)
- * 2. Create MCP servers
+ * 2. View MCP servers (loaded from CSV)
  * 3. Create applications with model providers
  * 4. Add MCP servers to applications via the UI
  */
@@ -31,20 +31,12 @@ class WorkflowIntegrationTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Models - Spawn</title>")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("OpenAI")));
 
-        // Step 2: Create MCP servers
-        mockMvc.perform(post("/mcp-servers")
-                .param("name", "FileSystem MCP")
-                .param("url", "http://localhost:8080/mcp/filesystem")
-                .param("description", "MCP Server for file system operations"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/mcp-servers"));
-
-        mockMvc.perform(post("/mcp-servers")
-                .param("name", "Database MCP")
-                .param("url", "http://localhost:8080/mcp/database")
-                .param("description", "MCP Server for database operations"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/mcp-servers"));
+        // Step 2: Verify MCP servers are loaded from CSV
+        mockMvc.perform(get("/mcp-servers"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>MCP Servers - Spawn</title>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Markitdown")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("GitHub")));
 
         // Step 3: Create applications with model providers from CSV
         mockMvc.perform(post("/applications")
@@ -69,9 +61,9 @@ class WorkflowIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Application Details - Spawn</title>")));
 
-        // Step 6: Add MCP server to application
+        // Step 6: Add MCP server to application (using name from CSV)
         mockMvc.perform(post("/applications/1/mcp-servers/add")
-                .param("mcpServerId", "1"))
+                .param("mcpServerName", "GitHub"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/applications/1"));
     }

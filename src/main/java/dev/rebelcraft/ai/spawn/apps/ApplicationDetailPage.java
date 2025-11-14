@@ -90,18 +90,21 @@ public class ApplicationDetailPage implements View {
                     attrs(".table.table-striped.mb-4"),
                     thead(
                         tr(
-                            th("ID"),
                             th("Name"),
-                            th("URL"),
+                            th("Icon"),
                             th("Description"),
                             th("Actions")
                         )
                     ),
                     tbody(
                         each(currentServers, server -> tr(
-                            td(server.getId().toString()),
                             td(server.getName()),
-                            td(server.getUrl()),
+                            td(
+                                img(attrs(".rounded-circle"))
+                                    .withSrc(server.getIcon())
+                                    .withAlt(server.getName() + " logo")
+                                    .withStyle("width: 32px; height: 32px;")
+                            ),
                             td(server.getDescription() != null ? server.getDescription() : ""),
                             td(
                                 form(
@@ -110,7 +113,7 @@ public class ApplicationDetailPage implements View {
                                         .attr("type", "submit")
                                         .attr("onclick", "return confirm('Are you sure you want to remove this MCP server?')")
                                 ).attr("method", "post")
-                                 .attr("action", "/applications/" + app.getId() + "/mcp-servers/" + server.getId() + "/remove")
+                                 .attr("action", "/applications/" + app.getId() + "/mcp-servers/" + server.getName() + "/remove")
                             )
                         ))
                     )
@@ -123,16 +126,16 @@ public class ApplicationDetailPage implements View {
                     attrs(".row.g-3.align-items-end"),
                     div(
                         attrs(".col-auto"),
-                        label(attrs(".form-label"), "Select MCP Server").attr("for", "mcpServerId"),
+                        label(attrs(".form-label"), "Select MCP Server").attr("for", "mcpServerName"),
                         select(attrs(".form-select"))
-                            .attr("id", "mcpServerId")
-                            .attr("name", "mcpServerId")
+                            .attr("id", "mcpServerName")
+                            .attr("name", "mcpServerName")
                             .attr("required", "required")
                             .with(
                                 option("Choose...").attr("value", ""),
                                 each(availableServers, server -> 
-                                    option(server.getName() + " - " + server.getUrl())
-                                        .attr("value", server.getId().toString())
+                                    option(server.getName() + " - " + server.getDescription())
+                                        .attr("value", server.getName())
                                 )
                             )
                     ),
@@ -143,7 +146,7 @@ public class ApplicationDetailPage implements View {
                     )
                 ).attr("method", "post")
                  .attr("action", "/applications/" + app.getId() + "/mcp-servers/add") :
-                div(attrs(".alert.alert-warning"), "No MCP servers available to add. Create MCP servers first.")
+                div(attrs(".alert.alert-warning"), "No MCP servers available to add.")
         );
     }
 

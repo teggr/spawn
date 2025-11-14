@@ -1,45 +1,26 @@
 package dev.rebelcraft.ai.spawn.mcp;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-
-@Entity
-@Table(name = "mcp_servers")
+/**
+ * McpServer represents an MCP server from the mcp_servers.csv file.
+ * This is now a read-only POJO loaded from CSV, not a database entity.
+ */
 public class McpServer {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @NotBlank(message = "Server name is required")
-    @Column(nullable = false)
     private String name;
-
-    @NotBlank(message = "Server URL is required")
-    @Column(nullable = false)
-    private String url;
-
-    @Column(length = 500)
+    private String icon;
     private String description;
 
     // Constructors
     public McpServer() {
     }
 
-    public McpServer(String name, String url) {
+    public McpServer(String name, String icon, String description) {
         this.name = name;
-        this.url = url;
+        this.icon = icon;
+        this.description = description;
     }
 
     // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public String getName() {
         return name;
     }
@@ -48,12 +29,12 @@ public class McpServer {
         this.name = name;
     }
 
-    public String getUrl() {
-        return url;
+    public String getIcon() {
+        return icon;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setIcon(String icon) {
+        this.icon = icon;
     }
 
     public String getDescription() {

@@ -17,25 +17,11 @@ class McpServerControllerIntegrationTest {
     private MockMvc mockMvc;
 
     @Test
-    void shouldCreateMcpServer() throws Exception {
-        mockMvc.perform(post("/mcp-servers")
-                .param("name", "FileSystem MCP")
-                .param("url", "http://localhost:8080/mcp")
-                .param("description", "MCP Server for file system operations"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/mcp-servers"));
-    }
-
-    @Test
-    void shouldGetAllMcpServers() throws Exception {
+    void shouldGetAllMcpServersFromCsv() throws Exception {
         mockMvc.perform(get("/mcp-servers"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>MCP Servers - Spawn</title>")));
-    }
-
-    @Test
-    void shouldReturnNotFoundWhenMcpServerDoesNotExist() throws Exception {
-        mockMvc.perform(get("/mcp-servers/999/edit"))
-                .andExpect(status().is4xxClientError());
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>MCP Servers - Spawn</title>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Markitdown")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("GitHub")));
     }
 }
