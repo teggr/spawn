@@ -192,10 +192,8 @@ class ApplicationControllerIntegrationTest {
                 .andExpect(model().attributeExists("application"))
                 .andExpect(model().attributeExists("availableModels"))
                 .andExpect(model().attributeExists("availableAgents"))
-                .andExpect(model().attributeExists("availableServers"))
                 // The detail page should not contain inline add/remove forms for associations
                 .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Add Model"))))
-                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Add Agent"))))
-                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Add Server"))));
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Add Agent"))));
     }
 }

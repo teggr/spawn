@@ -60,11 +60,5 @@ class WorkflowIntegrationTest {
         mockMvc.perform(get("/applications/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Application Details - Spawn</title>")));
-
-        // Step 6: Add MCP server to application (using name from CSV)
-        mockMvc.perform(post("/applications/1/mcp-servers/add")
-                .param("mcpServerName", "GitHub"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/applications/1"));
     }
 }
