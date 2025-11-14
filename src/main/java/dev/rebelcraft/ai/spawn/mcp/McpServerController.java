@@ -22,4 +22,16 @@ public class McpServerController {
         model.addAttribute("servers", servers);
         return "mcpServersListPage";
     }
+
+    @PostMapping("/{serverName}/favorite")
+    public String addFavorite(@PathVariable String serverName) {
+        mcpServerService.addFavorite(serverName);
+        return "redirect:/mcp-servers";
+    }
+
+    @PostMapping("/{serverName}/unfavorite")
+    public String removeFavorite(@PathVariable String serverName) {
+        mcpServerService.removeFavorite(serverName);
+        return "redirect:/mcp-servers";
+    }
 }

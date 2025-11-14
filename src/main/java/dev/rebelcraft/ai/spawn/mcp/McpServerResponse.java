@@ -5,6 +5,7 @@ public class McpServerResponse {
     private String name;
     private String icon;
     private String description;
+    private boolean favorite;
 
     // Constructors
     public McpServerResponse() {
@@ -14,6 +15,13 @@ public class McpServerResponse {
         this.name = name;
         this.icon = icon;
         this.description = description;
+    }
+
+    public McpServerResponse(String name, String icon, String description, boolean favorite) {
+        this.name = name;
+        this.icon = icon;
+        this.description = description;
+        this.favorite = favorite;
     }
 
     // Getters and Setters
@@ -39,5 +47,13 @@ public class McpServerResponse {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public boolean isFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
     }
 }

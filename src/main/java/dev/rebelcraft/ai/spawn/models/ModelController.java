@@ -22,4 +22,16 @@ public class ModelController {
         model.addAttribute("models", models);
         return "modelsListPage";
     }
+
+    @PostMapping("/{provider}/favorite")
+    public String addFavorite(@PathVariable String provider) {
+        modelService.addFavorite(provider);
+        return "redirect:/models";
+    }
+
+    @PostMapping("/{provider}/unfavorite")
+    public String removeFavorite(@PathVariable String provider) {
+        modelService.removeFavorite(provider);
+        return "redirect:/models";
+    }
 }

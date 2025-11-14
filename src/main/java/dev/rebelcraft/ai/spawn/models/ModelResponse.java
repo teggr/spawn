@@ -11,6 +11,7 @@ public class ModelResponse {
     private String builtInJson;
     private String local;
     private String openAiApiCompatible;
+    private boolean favorite;
 
     // Constructors
     public ModelResponse() {
@@ -28,6 +29,21 @@ public class ModelResponse {
         this.builtInJson = builtInJson;
         this.local = local;
         this.openAiApiCompatible = openAiApiCompatible;
+    }
+
+    public ModelResponse(String provider, String multimodality, String toolsFunctions, String streaming,
+                        String retry, String observability, String builtInJson, String local,
+                        String openAiApiCompatible, boolean favorite) {
+        this.provider = provider;
+        this.multimodality = multimodality;
+        this.toolsFunctions = toolsFunctions;
+        this.streaming = streaming;
+        this.retry = retry;
+        this.observability = observability;
+        this.builtInJson = builtInJson;
+        this.local = local;
+        this.openAiApiCompatible = openAiApiCompatible;
+        this.favorite = favorite;
     }
 
     // Getters and Setters
@@ -101,5 +117,13 @@ public class ModelResponse {
 
     public void setOpenAiApiCompatible(String openAiApiCompatible) {
         this.openAiApiCompatible = openAiApiCompatible;
+    }
+
+    public boolean isFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
     }
 }

@@ -2,6 +2,7 @@ package dev.rebelcraft.ai.spawn.mcp;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -9,14 +10,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class McpServerService {
 
     private final List<McpServer> mcpServers;
+    private final McpServerFavoriteRepository favoriteRepository;
 
-    public McpServerService() {
+    public McpServerService(McpServerFavoriteRepository favoriteRepository) {
+        this.favoriteRepository = favoriteRepository;
         this.mcpServers = loadMcpServersFromCsv();
     }
 
@@ -75,23 +79,50 @@ public class McpServerService {
     }
 
     public List<McpServerResponse> getAllMcpServers() {
+        // Get all favorites
+        Set<String> favoriteNames = favoriteRepository.findAll().stream()
+            .map(McpServerFavorite::getServerName)
+            .collect(Collectors.toSet());
+        
         return mcpServers.stream()
-            .map(this::toResponse)
+            .map(server -> toResponse(server, favoriteNames.contains(server.getName())))
             .collect(Collectors.toList());
     }
 
     public Optional<McpServerResponse> getMcpServerByName(String name) {
+        boolean isFavorite = favoriteRepository.existsByServerName(name);
         return mcpServers.stream()
             .filter(server -> server.getName().equalsIgnoreCase(name))
-            .map(this::toResponse)
+            .map(server -> toResponse(server, isFavorite))
             .findFirst();
     }
 
-    private McpServerResponse toResponse(McpServer server) {
+    public void addFavorite(String serverName) {
+        // Check if server exists
+        boolean serverExists = mcpServers.stream()
+            .anyMatch(server -> server.getName().equalsIgnoreCase(serverName));
+        
+        if (!serverExists) {
+            throw new IllegalArgumentException("MCP server not found: " + serverName);
+        }
+        
+        // Add favorite if not already exists
+        if (!favoriteRepository.existsByServerName(serverName)) {
+            favoriteRepository.save(new McpServerFavorite(serverName));
+        }
+    }
+
+    @Transactional
+    public void removeFavorite(String serverName) {
+        favoriteRepository.deleteByServerName(serverName);
+    }
+
+    private McpServerResponse toResponse(McpServer server, boolean isFavorite) {
         return new McpServerResponse(
             server.getName(),
             server.getIcon(),
-            server.getDescription()
+            server.getDescription(),
+            isFavorite
         );
     }
 }
