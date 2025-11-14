@@ -1,13 +1,16 @@
 package dev.rebelcraft.ai.spawn.apps;
 
 import jakarta.validation.constraints.NotBlank;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ApplicationRequest {
 
     @NotBlank(message = "Application name is required")
     private String name;
 
-    private String modelProvider;
+    private Set<String> modelProviders = new HashSet<>();
+    private Set<String> agentNames = new HashSet<>();
 
     // Constructors
     public ApplicationRequest() {
@@ -26,11 +29,19 @@ public class ApplicationRequest {
         this.name = name;
     }
 
-    public String getModelProvider() {
-        return modelProvider;
+    public Set<String> getModelProviders() {
+        return modelProviders;
     }
 
-    public void setModelProvider(String modelProvider) {
-        this.modelProvider = modelProvider;
+    public void setModelProviders(Set<String> modelProviders) {
+        this.modelProviders = modelProviders;
+    }
+
+    public Set<String> getAgentNames() {
+        return agentNames;
+    }
+
+    public void setAgentNames(Set<String> agentNames) {
+        this.agentNames = agentNames;
     }
 }

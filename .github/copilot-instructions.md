@@ -44,13 +44,16 @@ src/main/java/dev/rebelcraft/ai/spawn/
 ## Core Domain Concepts
 
 1. **Models**: Represent AI model providers (e.g., OpenAI, Anthropic Claude, Azure OpenAI) loaded from a static CSV file (`src/main/resources/models/models.csv`). Models are **read-only** and include information about capabilities like multimodality, tools/functions support, streaming, retry, observability, built-in JSON, local deployment, and OpenAI API compatibility.
-2. **MCP Servers**: Model Context Protocol servers that provide additional capabilities (e.g., file system access, database operations)
-3. **Applications**: AI application configurations that combine a model provider with zero or more MCP servers
+2. **Agents**: Expert agents with system prompts and optional MCP server associations that can be assigned to applications. Agents are stored in the database and can be created, updated, and deleted through CRUD operations.
+3. **MCP Servers**: Model Context Protocol servers that provide additional capabilities (e.g., file system access, database operations)
+4. **Applications**: AI application configurations that combine multiple model providers, multiple agents, and zero or more MCP servers
 
 ### Entity Relationships
 
-- Application references Model by provider name (String) - not a database relationship
-- Application *many-to-many* McpServer (applications can have multiple MCP servers)
+- Application references Models by provider names (Set<String>) - not a database relationship
+- Application references Agents by agent names (Set<String>) - not a database relationship
+- Application *many-to-many* McpServer (applications can have multiple MCP servers stored as Set<String>)
+- Agent *many-to-many* McpServer (agents can have multiple MCP servers stored as Set<String>)
 
 ## API Design Patterns
 

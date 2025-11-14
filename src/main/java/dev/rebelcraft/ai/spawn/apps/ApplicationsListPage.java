@@ -53,7 +53,8 @@ public class ApplicationsListPage extends PageView {
         tr(
           th("ID"),
           th("Name"),
-          th("Model"),
+          th("Models"),
+          th("Agents"),
           th("MCP Servers"),
           th("Created At"),
           th("Actions")
@@ -63,7 +64,8 @@ public class ApplicationsListPage extends PageView {
         each(applications, app -> tr(
           td(app.getId().toString()),
           td(app.getName()),
-          td(app.getModel() != null ? app.getModel().getProvider() : "None"),
+          td(app.getModels() != null ? String.valueOf(app.getModels().size()) : "0"),
+          td(app.getAgents() != null ? String.valueOf(app.getAgents().size()) : "0"),
           td(app.getMcpServers() != null ? String.valueOf(app.getMcpServers().size()) : "0"),
           td(app.getCreatedAt() != null ? app.getCreatedAt().toString() : ""),
           td(
