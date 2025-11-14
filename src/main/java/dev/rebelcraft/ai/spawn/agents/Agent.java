@@ -27,6 +27,9 @@ public class Agent {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "model_provider")
+    private String modelProvider;
+
     @ElementCollection
     @CollectionTable(
         name = "agent_mcp_servers",
@@ -105,5 +108,13 @@ public class Agent {
 
     public void removeMcpServerName(String mcpServerName) {
         this.mcpServerNames.remove(mcpServerName);
+    }
+
+    public String getModelProvider() {
+        return modelProvider;
+    }
+
+    public void setModelProvider(String modelProvider) {
+        this.modelProvider = modelProvider;
     }
 }

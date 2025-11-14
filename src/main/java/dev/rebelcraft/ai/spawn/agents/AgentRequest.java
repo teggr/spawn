@@ -7,6 +7,7 @@ public class AgentRequest {
     private String name;
     private String description;
     private String systemPrompt;
+    private String modelProvider;
     private List<String> mcpServerNames = new ArrayList<>();
 
     public AgentRequest() { }
@@ -46,6 +47,14 @@ public class AgentRequest {
 
     public void setMcpServerNames(List<String> mcpServerNames) {
         this.mcpServerNames = mcpServerNames;
+    }
+
+    public String getModelProvider() {
+        return modelProvider;
+    }
+
+    public void setModelProvider(String modelProvider) {
+        this.modelProvider = modelProvider;
     }
 }
 

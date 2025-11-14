@@ -38,6 +38,12 @@ public class AgentDetailPage extends PageView {
                     ),
 
                     div(attrs(".mb-3"),
+                        h5("Model Provider"),
+                        p(agent != null && agent.getModelProvider() != null ? agent.getModelProvider() : "None"),
+                        hr()
+                    ),
+
+                    div(attrs(".mb-3"),
                         h5("MCP Servers"),
                         agent != null && agent.getMcpServerNames() != null && !agent.getMcpServerNames().isEmpty() ?
                             each(agent.getMcpServerNames(), name ->

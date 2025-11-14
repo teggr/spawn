@@ -1,6 +1,7 @@
 package dev.rebelcraft.ai.spawn.agents;
 
 import dev.rebelcraft.ai.spawn.mcp.McpServerResponse;
+import dev.rebelcraft.ai.spawn.models.ModelResponse;
 import dev.rebelcraft.ai.spawn.web.view.PageView;
 import j2html.tags.DomContent;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +25,7 @@ public class AgentFormPage extends PageView {
         String name = (String) model.get("name");
         String description = (String) model.get("description");
         String systemPrompt = (String) model.get("systemPrompt");
+        String modelProvider = (String) model.get("modelProvider");
         String error = (String) model.get("error");
 
         @SuppressWarnings("unchecked")
@@ -31,6 +33,9 @@ public class AgentFormPage extends PageView {
 
         @SuppressWarnings("unchecked")
         List<McpServerResponse> mcpServers = (List<McpServerResponse>) model.get("mcpServers");
+
+        @SuppressWarnings("unchecked")
+        List<ModelResponse> models = (List<ModelResponse>) model.get("models");
 
         boolean isEdit = agentId != null;
 
@@ -58,6 +63,21 @@ public class AgentFormPage extends PageView {
                                 div(attrs(".mb-3"),
                                         label(attrs(".form-label"), "Description").attr("for", "description"),
                                         input(attrs(".form-control")).attr("type", "text").attr("id", "description").attr("name", "description").condAttr(description != null, "value", description != null ? description : "")
+                                ),
+
+                                div(attrs(".mb-3"),
+                                        label(attrs(".form-label"), "Model Provider").attr("for", "modelProvider"),
+                                        select(attrs(".form-select"))
+                                                .attr("id", "modelProvider")
+                                                .attr("name", "modelProvider")
+                                                .with(
+                                                        option("Select a model provider...").attr("value", "").condAttr(modelProvider == null || modelProvider.isEmpty(), "selected", "selected"),
+                                                        models != null ? each(models, m ->
+                                                                option(m.getProvider())
+                                                                        .attr("value", m.getProvider())
+                                                                        .condAttr(modelProvider != null && modelProvider.equals(m.getProvider()), "selected", "selected")
+                                                        ) : text("")
+                                                )
                                 ),
 
                                 div(attrs(".mb-3"),

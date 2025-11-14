@@ -11,17 +11,19 @@ public class AgentResponse {
     private String name;
     private String description;
     private String systemPrompt;
+    private String modelProvider;
     private List<String> mcpServerNames = new ArrayList<>();
     private Set<String> unmatchedMcpNames = new HashSet<>();
     private LocalDateTime createdAt;
 
     public AgentResponse() { }
 
-    public AgentResponse(Long id, String name, String description, String systemPrompt, List<String> mcpServerNames, LocalDateTime createdAt) {
+    public AgentResponse(Long id, String name, String description, String systemPrompt, String modelProvider, List<String> mcpServerNames, LocalDateTime createdAt) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.systemPrompt = systemPrompt;
+        this.modelProvider = modelProvider;
         this.mcpServerNames = mcpServerNames;
         this.createdAt = createdAt;
     }
@@ -80,6 +82,14 @@ public class AgentResponse {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getModelProvider() {
+        return modelProvider;
+    }
+
+    public void setModelProvider(String modelProvider) {
+        this.modelProvider = modelProvider;
     }
 }
 

@@ -54,6 +54,7 @@ public class AgentsListPage extends PageView {
                     th("ID"),
                     th("Name"),
                     th("Description"),
+                    th("Model"),
                     th("MCP Servers"),
                     th("Created At"),
                     th("Actions")
@@ -64,6 +65,7 @@ public class AgentsListPage extends PageView {
                     td(agent.getId().toString()),
                     td(agent.getName()),
                     td(agent.getDescription() != null ? agent.getDescription() : ""),
+                    td(agent.getModelProvider() != null ? agent.getModelProvider() : "None"),
                     td(agent.getMcpServerNames() != null ? String.valueOf(agent.getMcpServerNames().size()) : "0"),
                     td(agent.getCreatedAt() != null ? agent.getCreatedAt().toString() : ""),
                     td(

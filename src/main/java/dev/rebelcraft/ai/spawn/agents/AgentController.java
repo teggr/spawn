@@ -2,6 +2,8 @@ package dev.rebelcraft.ai.spawn.agents;
 
 import dev.rebelcraft.ai.spawn.mcp.McpServerResponse;
 import dev.rebelcraft.ai.spawn.mcp.McpServerService;
+import dev.rebelcraft.ai.spawn.models.ModelResponse;
+import dev.rebelcraft.ai.spawn.models.ModelService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -14,10 +16,12 @@ public class AgentController {
 
     private final AgentService agentService;
     private final McpServerService mcpServerService;
+    private final ModelService modelService;
 
-    public AgentController(AgentService agentService, McpServerService mcpServerService) {
+    public AgentController(AgentService agentService, McpServerService mcpServerService, ModelService modelService) {
         this.agentService = agentService;
         this.mcpServerService = mcpServerService;
+        this.modelService = modelService;
     }
 
     @GetMapping
@@ -30,6 +34,7 @@ public class AgentController {
     @GetMapping("/new")
     public String newAgentForm(Model model) {
         model.addAttribute("mcpServers", mcpServerService.getAllMcpServers());
+        model.addAttribute("models", modelService.getAllModels());
         return "agentFormPage";
     }
 
@@ -37,6 +42,7 @@ public class AgentController {
     public String createAgent(@RequestParam String name,
                               @RequestParam(required = false) String description,
                               @RequestParam String systemPrompt,
+                              @RequestParam(required = false) String modelProvider,
                               @RequestParam(required = false) List<String> mcpServerNames,
                               Model model) {
         try {
@@ -44,6 +50,9 @@ public class AgentController {
             request.setName(name);
             request.setDescription(description);
             request.setSystemPrompt(systemPrompt);
+            if (modelProvider != null && !modelProvider.isEmpty()) {
+                request.setModelProvider(modelProvider);
+            }
             if (mcpServerNames != null) request.setMcpServerNames(mcpServerNames);
 
             agentService.createAgent(request);
@@ -53,8 +62,10 @@ public class AgentController {
             model.addAttribute("name", name);
             model.addAttribute("description", description);
             model.addAttribute("systemPrompt", systemPrompt);
+            model.addAttribute("modelProvider", modelProvider);
             model.addAttribute("mcpServerNames", mcpServerNames);
             model.addAttribute("mcpServers", mcpServerService.getAllMcpServers());
+            model.addAttribute("models", modelService.getAllModels());
             return "agentFormPage";
         }
     }
@@ -74,8 +85,10 @@ public class AgentController {
         model.addAttribute("name", agent.getName());
         model.addAttribute("description", agent.getDescription());
         model.addAttribute("systemPrompt", agent.getSystemPrompt());
+        model.addAttribute("modelProvider", agent.getModelProvider());
         model.addAttribute("mcpServerNames", agent.getMcpServerNames());
         model.addAttribute("mcpServers", mcpServerService.getAllMcpServers());
+        model.addAttribute("models", modelService.getAllModels());
         return "agentFormPage";
     }
 
@@ -84,6 +97,7 @@ public class AgentController {
                               @RequestParam String name,
                               @RequestParam(required = false) String description,
                               @RequestParam String systemPrompt,
+                              @RequestParam(required = false) String modelProvider,
                               @RequestParam(required = false) List<String> mcpServerNames,
                               Model model) {
         try {
@@ -91,6 +105,9 @@ public class AgentController {
             request.setName(name);
             request.setDescription(description);
             request.setSystemPrompt(systemPrompt);
+            if (modelProvider != null && !modelProvider.isEmpty()) {
+                request.setModelProvider(modelProvider);
+            }
             if (mcpServerNames != null) request.setMcpServerNames(mcpServerNames);
 
             agentService.updateAgent(id, request);
@@ -101,8 +118,10 @@ public class AgentController {
             model.addAttribute("name", name);
             model.addAttribute("description", description);
             model.addAttribute("systemPrompt", systemPrompt);
+            model.addAttribute("modelProvider", modelProvider);
             model.addAttribute("mcpServerNames", mcpServerNames);
             model.addAttribute("mcpServers", mcpServerService.getAllMcpServers());
+            model.addAttribute("models", modelService.getAllModels());
             return "agentFormPage";
         }
     }
