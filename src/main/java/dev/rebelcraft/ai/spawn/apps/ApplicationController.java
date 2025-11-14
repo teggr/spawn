@@ -1,9 +1,7 @@
 package dev.rebelcraft.ai.spawn.apps;
 
-import dev.rebelcraft.ai.spawn.mcp.McpServerResponse;
-import dev.rebelcraft.ai.spawn.models.ModelResponse;
-import dev.rebelcraft.ai.spawn.mcp.McpServerService;
-import dev.rebelcraft.ai.spawn.models.ModelService;
+import dev.rebelcraft.ai.spawn.agents.AgentResponse;
+import dev.rebelcraft.ai.spawn.agents.AgentService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -17,15 +15,12 @@ import java.util.stream.Collectors;
 public class ApplicationController {
 
     private final ApplicationService applicationService;
-    private final ModelService modelService;
-    private final McpServerService mcpServerService;
+    private final AgentService agentService;
 
     public ApplicationController(ApplicationService applicationService, 
-                                ModelService modelService,
-                                McpServerService mcpServerService) {
+                                AgentService agentService) {
         this.applicationService = applicationService;
-        this.modelService = modelService;
-        this.mcpServerService = mcpServerService;
+        this.agentService = agentService;
     }
 
     @GetMapping
@@ -37,27 +32,19 @@ public class ApplicationController {
 
     @GetMapping("/new")
     public String newApplicationForm(Model model) {
-        List<ModelResponse> models = modelService.getAllModels();
-        model.addAttribute("models", models);
         return "applicationFormPage";
     }
 
     @PostMapping
     public String createApplication(@RequestParam String name,
-                                   @RequestParam(required = false) String modelProvider,
                                    Model model) {
         try {
             ApplicationRequest request = new ApplicationRequest(name);
-            if (modelProvider != null && !modelProvider.isEmpty()) {
-                request.setModelProvider(modelProvider);
-            }
             applicationService.createApplication(request);
             return "redirect:/applications";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("name", name);
-            model.addAttribute("modelProvider", modelProvider);
-            model.addAttribute("models", modelService.getAllModels());
             return "applicationFormPage";
         }
     }
@@ -65,52 +52,43 @@ public class ApplicationController {
     @GetMapping("/{id}")
     public String viewApplication(@PathVariable Long id, Model model) {
         ApplicationResponse app = applicationService.getApplicationById(id);
-        List<McpServerResponse> allServers = mcpServerService.getAllMcpServers();
+        List<AgentResponse> allAgents = agentService.getAllAgents();
         
-        // Filter out servers that are already associated
-        Set<String> associatedServerNames = app.getMcpServers() != null ? 
-            app.getMcpServers().stream().map(McpServerResponse::getName).collect(Collectors.toSet()) :
+        // Filter out agents that are already associated
+        Set<String> associatedAgentNames = app.getAgents() != null ? 
+            app.getAgents().stream().map(AgentResponse::getName).collect(Collectors.toSet()) :
             Set.of();
         
-        List<McpServerResponse> availableServers = allServers.stream()
-            .filter(server -> !associatedServerNames.contains(server.getName()))
+        List<AgentResponse> availableAgents = allAgents.stream()
+            .filter(agent -> !associatedAgentNames.contains(agent.getName()))
             .collect(Collectors.toList());
         
         model.addAttribute("application", app);
-        model.addAttribute("availableServers", availableServers);
+        model.addAttribute("availableAgents", availableAgents);
         return "applicationDetailPage";
     }
 
     @GetMapping("/{id}/edit")
     public String editApplicationForm(@PathVariable Long id, Model model) {
         ApplicationResponse app = applicationService.getApplicationById(id);
-        List<ModelResponse> models = modelService.getAllModels();
         
         model.addAttribute("applicationId", app.getId().toString());
         model.addAttribute("name", app.getName());
-        model.addAttribute("modelProvider", app.getModel() != null ? app.getModel().getProvider() : "");
-        model.addAttribute("models", models);
         return "applicationFormPage";
     }
 
     @PostMapping("/{id}")
     public String updateApplication(@PathVariable Long id,
                                    @RequestParam String name,
-                                   @RequestParam(required = false) String modelProvider,
                                    Model model) {
         try {
             ApplicationRequest request = new ApplicationRequest(name);
-            if (modelProvider != null && !modelProvider.isEmpty()) {
-                request.setModelProvider(modelProvider);
-            }
             applicationService.updateApplication(id, request);
             return "redirect:/applications";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("applicationId", id.toString());
             model.addAttribute("name", name);
-            model.addAttribute("modelProvider", modelProvider);
-            model.addAttribute("models", modelService.getAllModels());
             return "applicationFormPage";
         }
     }
@@ -121,17 +99,17 @@ public class ApplicationController {
         return "redirect:/applications";
     }
 
-    @PostMapping("/{applicationId}/mcp-servers/add")
-    public String addMcpServer(@PathVariable Long applicationId,
-                              @RequestParam String mcpServerName) {
-        applicationService.addMcpServerToApplication(applicationId, mcpServerName);
+    @PostMapping("/{applicationId}/agents/add")
+    public String addAgent(@PathVariable Long applicationId,
+                          @RequestParam String agentName) {
+        applicationService.addAgentToApplication(applicationId, agentName);
         return "redirect:/applications/" + applicationId;
     }
 
-    @PostMapping("/{applicationId}/mcp-servers/{mcpServerName}/remove")
-    public String removeMcpServer(@PathVariable Long applicationId,
-                                 @PathVariable String mcpServerName) {
-        applicationService.removeMcpServerFromApplication(applicationId, mcpServerName);
+    @PostMapping("/{applicationId}/agents/{agentName}/remove")
+    public String removeAgent(@PathVariable Long applicationId,
+                             @PathVariable String agentName) {
+        applicationService.removeAgentFromApplication(applicationId, agentName);
         return "redirect:/applications/" + applicationId;
     }
 }

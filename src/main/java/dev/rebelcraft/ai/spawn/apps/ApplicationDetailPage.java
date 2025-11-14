@@ -1,6 +1,6 @@
 package dev.rebelcraft.ai.spawn.apps;
 
-import dev.rebelcraft.ai.spawn.mcp.McpServerResponse;
+import dev.rebelcraft.ai.spawn.agents.AgentResponse;
 import dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout;
 import dev.rebelcraft.ai.spawn.web.view.PageView;
 import j2html.tags.ContainerTag;
@@ -23,7 +23,7 @@ public class ApplicationDetailPage extends PageView {
 
     ApplicationResponse app = (ApplicationResponse) model.get("application");
     @SuppressWarnings("unchecked")
-    List<McpServerResponse> availableServers = (List<McpServerResponse>) model.get("availableServers");
+    List<AgentResponse> availableAgents = (List<AgentResponse>) model.get("availableAgents");
 
     return DefaultPageLayout.createPage(
       "Application Details - Spawn",
@@ -46,83 +46,78 @@ public class ApplicationDetailPage extends PageView {
             h5(attrs(".card-title"), "Details"),
             p(strong("ID: "), text(app.getId().toString())),
             p(strong("Name: "), text(app.getName())),
-            p(strong("Model Provider: "), text(app.getModel() != null ?
-              app.getModel().getProvider() : "None")),
             p(strong("Created At: "), text(app.getCreatedAt() != null ? app.getCreatedAt().toString() : ""))
           )
         ),
-        h3("Associated MCP Servers"),
-        mcpServersSection(app, availableServers)
+        h3("Associated Agents"),
+        agentsSection(app, availableAgents)
       )
     );
   }
 
-  private ContainerTag mcpServersSection(ApplicationResponse app, List<McpServerResponse> availableServers) {
-    Set<McpServerResponse> currentServers = app.getMcpServers();
+  private ContainerTag agentsSection(ApplicationResponse app, List<AgentResponse> availableAgents) {
+    Set<AgentResponse> currentAgents = app.getAgents();
 
     return div(
-      currentServers != null && !currentServers.isEmpty() ?
+      currentAgents != null && !currentAgents.isEmpty() ?
         table(
           attrs(".table.table-striped.mb-4"),
           thead(
             tr(
               th("Name"),
-              th("Icon"),
               th("Description"),
+              th("Model"),
+              th("MCP Servers"),
               th("Actions")
             )
           ),
           tbody(
-            each(currentServers, server -> tr(
-              td(server.getName()),
-              td(
-                img(attrs(".rounded-circle"))
-                  .withSrc(server.getIcon())
-                  .withAlt(server.getName() + " logo")
-                  .withStyle("width: 32px; height: 32px;")
-              ),
-              td(server.getDescription() != null ? server.getDescription() : ""),
+            each(currentAgents, agent -> tr(
+              td(agent.getName()),
+              td(agent.getDescription() != null ? agent.getDescription() : ""),
+              td(agent.getModelProvider() != null ? agent.getModelProvider() : "None"),
+              td(agent.getMcpServerNames() != null ? String.valueOf(agent.getMcpServerNames().size()) : "0"),
               td(
                 form(
                   attrs(".d-inline"),
                   button(attrs(".btn.btn-sm.btn-danger"), "Remove")
                     .attr("type", "submit")
-                    .attr("onclick", "return confirm('Are you sure you want to remove this MCP server?')")
+                    .attr("onclick", "return confirm('Are you sure you want to remove this agent?')")
                 ).attr("method", "post")
-                  .attr("action", "/applications/" + app.getId() + "/mcp-servers/" + server.getName() + "/remove")
+                  .attr("action", "/applications/" + app.getId() + "/agents/" + agent.getName() + "/remove")
               )
             ))
           )
         ) :
-        div(attrs(".alert.alert-info"), "No MCP servers associated with this application."),
+        div(attrs(".alert.alert-info"), "No agents associated with this application."),
 
-      h4(attrs(".mt-4"), "Add MCP Server"),
-      availableServers != null && !availableServers.isEmpty() ?
+      h4(attrs(".mt-4"), "Add Agent"),
+      availableAgents != null && !availableAgents.isEmpty() ?
         form(
           attrs(".row.g-3.align-items-end"),
           div(
             attrs(".col-auto"),
-            label(attrs(".form-label"), "Select MCP Server").attr("for", "mcpServerName"),
+            label(attrs(".form-label"), "Select Agent").attr("for", "agentName"),
             select(attrs(".form-select"))
-              .attr("id", "mcpServerName")
-              .attr("name", "mcpServerName")
+              .attr("id", "agentName")
+              .attr("name", "agentName")
               .attr("required", "required")
               .with(
                 option("Choose...").attr("value", ""),
-                each(availableServers, server ->
-                  option(server.getName() + " - " + server.getDescription())
-                    .attr("value", server.getName())
+                each(availableAgents, agent ->
+                  option(agent.getName() + " - " + (agent.getDescription() != null ? agent.getDescription() : ""))
+                    .attr("value", agent.getName())
                 )
               )
           ),
           div(
             attrs(".col-auto"),
-            button(attrs(".btn.btn-primary"), "Add Server")
+            button(attrs(".btn.btn-primary"), "Add Agent")
               .attr("type", "submit")
           )
         ).attr("method", "post")
-          .attr("action", "/applications/" + app.getId() + "/mcp-servers/add") :
-        div(attrs(".alert.alert-warning"), "No MCP servers available to add.")
+          .attr("action", "/applications/" + app.getId() + "/agents/add") :
+        div(attrs(".alert.alert-warning"), "No agents available to add.")
     );
   }
 

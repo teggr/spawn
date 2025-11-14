@@ -1,15 +1,12 @@
 package dev.rebelcraft.ai.spawn.apps;
 
-import dev.rebelcraft.ai.spawn.mcp.McpServerResponse;
-import dev.rebelcraft.ai.spawn.mcp.McpServerService;
-import dev.rebelcraft.ai.spawn.models.ModelResponse;
-import dev.rebelcraft.ai.spawn.models.ModelService;
+import dev.rebelcraft.ai.spawn.agents.AgentResponse;
+import dev.rebelcraft.ai.spawn.agents.AgentService;
 import dev.rebelcraft.ai.spawn.utils.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -18,29 +15,16 @@ import java.util.stream.Collectors;
 public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
-    private final ModelService modelService;
-    private final McpServerService mcpServerService;
+    private final AgentService agentService;
 
     public ApplicationService(ApplicationRepository applicationRepository,
-                            ModelService modelService,
-                            McpServerService mcpServerService) {
+                            AgentService agentService) {
         this.applicationRepository = applicationRepository;
-        this.modelService = modelService;
-        this.mcpServerService = mcpServerService;
+        this.agentService = agentService;
     }
 
     public ApplicationResponse createApplication(ApplicationRequest request) {
         Application application = new Application(request.getName());
-        
-        if (request.getModelProvider() != null && !request.getModelProvider().isEmpty()) {
-            // Validate that the model provider exists in CSV
-            Optional<ModelResponse> model = modelService.getModelByProvider(request.getModelProvider());
-            if (model.isEmpty()) {
-                throw new IllegalArgumentException("Model provider not found: " + request.getModelProvider());
-            }
-            application.setModelProvider(request.getModelProvider());
-        }
-        
         Application savedApplication = applicationRepository.save(application);
         return toResponse(savedApplication);
     }
@@ -63,17 +47,6 @@ public class ApplicationService {
         
         application.setName(request.getName());
         
-        if (request.getModelProvider() != null && !request.getModelProvider().isEmpty()) {
-            // Validate that the model provider exists in CSV
-            Optional<ModelResponse> model = modelService.getModelByProvider(request.getModelProvider());
-            if (model.isEmpty()) {
-                throw new IllegalArgumentException("Model provider not found: " + request.getModelProvider());
-            }
-            application.setModelProvider(request.getModelProvider());
-        } else {
-            application.setModelProvider(null);
-        }
-        
         Application updatedApplication = applicationRepository.save(application);
         return toResponse(updatedApplication);
     }
@@ -85,26 +58,30 @@ public class ApplicationService {
         applicationRepository.deleteById(id);
     }
 
-    public ApplicationResponse addMcpServerToApplication(Long applicationId, String mcpServerName) {
+    public ApplicationResponse addAgentToApplication(Long applicationId, String agentName) {
         Application application = applicationRepository.findById(applicationId)
             .orElseThrow(() -> new ResourceNotFoundException("Application not found with id: " + applicationId));
         
-        // Validate that the MCP server exists in CSV
-        Optional<McpServerResponse> mcpServer = mcpServerService.getMcpServerByName(mcpServerName);
-        if (mcpServer.isEmpty()) {
-            throw new IllegalArgumentException("MCP Server not found: " + mcpServerName);
+        // Validate that the agent exists
+        try {
+            agentService.getAllAgents().stream()
+                .filter(a -> a.getName().equals(agentName))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Agent not found: " + agentName));
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Agent not found: " + agentName);
         }
         
-        application.addMcpServerName(mcpServerName);
+        application.addAgentName(agentName);
         Application updatedApplication = applicationRepository.save(application);
         return toResponse(updatedApplication);
     }
 
-    public ApplicationResponse removeMcpServerFromApplication(Long applicationId, String mcpServerName) {
+    public ApplicationResponse removeAgentFromApplication(Long applicationId, String agentName) {
         Application application = applicationRepository.findById(applicationId)
             .orElseThrow(() -> new ResourceNotFoundException("Application not found with id: " + applicationId));
         
-        application.removeMcpServerName(mcpServerName);
+        application.removeAgentName(agentName);
         Application updatedApplication = applicationRepository.save(application);
         return toResponse(updatedApplication);
     }
@@ -116,18 +93,15 @@ public class ApplicationService {
             application.getCreatedAt()
         );
         
-        if (application.getModelProvider() != null) {
-            Optional<ModelResponse> model = modelService.getModelByProvider(application.getModelProvider());
-            model.ifPresent(response::setModel);
-        }
-        
-        if (application.getMcpServerNames() != null && !application.getMcpServerNames().isEmpty()) {
-            Set<McpServerResponse> mcpServers = application.getMcpServerNames().stream()
-                .map(name -> mcpServerService.getMcpServerByName(name))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+        if (application.getAgentNames() != null && !application.getAgentNames().isEmpty()) {
+            Set<AgentResponse> agents = application.getAgentNames().stream()
+                .map(name -> agentService.getAllAgents().stream()
+                    .filter(a -> a.getName().equals(name))
+                    .findFirst()
+                    .orElse(null))
+                .filter(agent -> agent != null)
                 .collect(Collectors.toSet());
-            response.setMcpServers(mcpServers);
+            response.setAgents(agents);
         }
         
         return response;

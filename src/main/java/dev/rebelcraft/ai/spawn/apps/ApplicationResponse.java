@@ -1,7 +1,6 @@
 package dev.rebelcraft.ai.spawn.apps;
 
-import dev.rebelcraft.ai.spawn.mcp.McpServerResponse;
-import dev.rebelcraft.ai.spawn.models.ModelResponse;
+import dev.rebelcraft.ai.spawn.agents.AgentResponse;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -11,8 +10,7 @@ public class ApplicationResponse {
     private Long id;
     private String name;
     private LocalDateTime createdAt;
-    private ModelResponse model;
-    private Set<McpServerResponse> mcpServers;
+    private Set<AgentResponse> agents;
 
     // Constructors
     public ApplicationResponse() {
@@ -49,19 +47,11 @@ public class ApplicationResponse {
         this.createdAt = createdAt;
     }
 
-    public ModelResponse getModel() {
-        return model;
+    public Set<AgentResponse> getAgents() {
+        return agents;
     }
 
-    public void setModel(ModelResponse model) {
-        this.model = model;
-    }
-
-    public Set<McpServerResponse> getMcpServers() {
-        return mcpServers;
-    }
-
-    public void setMcpServers(Set<McpServerResponse> mcpServers) {
-        this.mcpServers = mcpServers;
+    public void setAgents(Set<AgentResponse> agents) {
+        this.agents = agents;
     }
 }

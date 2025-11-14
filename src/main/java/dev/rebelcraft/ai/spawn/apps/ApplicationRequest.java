@@ -7,8 +7,6 @@ public class ApplicationRequest {
     @NotBlank(message = "Application name is required")
     private String name;
 
-    private String modelProvider;
-
     // Constructors
     public ApplicationRequest() {
     }
@@ -24,13 +22,5 @@ public class ApplicationRequest {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getModelProvider() {
-        return modelProvider;
-    }
-
-    public void setModelProvider(String modelProvider) {
-        this.modelProvider = modelProvider;
     }
 }

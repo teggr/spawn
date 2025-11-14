@@ -1,13 +1,11 @@
 package dev.rebelcraft.ai.spawn.apps;
 
-import dev.rebelcraft.ai.spawn.models.ModelResponse;
 import dev.rebelcraft.ai.spawn.web.view.PageView;
 import j2html.tags.DomContent;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Map;
 
 import static dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout.*;
@@ -22,10 +20,7 @@ public class ApplicationFormPage extends PageView {
 
     String applicationId = (String) model.get("applicationId");
     String name = (String) model.get("name");
-    String modelProvider = (String) model.get("modelProvider");
     String error = (String) model.get("error");
-    @SuppressWarnings("unchecked")
-    List<ModelResponse> models = (List<ModelResponse>) model.get("models");
 
     boolean isEdit = applicationId != null;
 
@@ -46,21 +41,6 @@ public class ApplicationFormPage extends PageView {
               .attr("name", "name")
               .attr("required", "required")
               .condAttr(name != null, "value", name != null ? name : "")
-          ),
-          div(
-            attrs(".mb-3"),
-            label(attrs(".form-label"), "Model Provider").attr("for", "modelProvider"),
-            select(attrs(".form-select"))
-              .attr("id", "modelProvider")
-              .attr("name", "modelProvider")
-              .with(
-                option("Select a model provider...").attr("value", "").condAttr(modelProvider == null || modelProvider.isEmpty(), "selected", "selected"),
-                models != null ? each(models, m ->
-                  option(m.getProvider())
-                    .attr("value", m.getProvider())
-                    .condAttr(modelProvider != null && modelProvider.equals(m.getProvider()), "selected", "selected")
-                ) : text("")
-              )
           ),
           div(
             attrs(".mt-3"),
