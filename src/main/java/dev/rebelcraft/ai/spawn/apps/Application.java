@@ -1,6 +1,5 @@
 package dev.rebelcraft.ai.spawn.apps;
 
-import dev.rebelcraft.ai.spawn.mcp.McpServer;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
@@ -25,13 +24,13 @@ public class Application {
     @Column(name = "model_provider")
     private String modelProvider;
 
-    @ManyToMany
-    @JoinTable(
+    @ElementCollection
+    @CollectionTable(
         name = "application_mcp_servers",
-        joinColumns = @JoinColumn(name = "application_id"),
-        inverseJoinColumns = @JoinColumn(name = "mcp_server_id")
+        joinColumns = @JoinColumn(name = "application_id")
     )
-    private Set<McpServer> mcpServers = new HashSet<>();
+    @Column(name = "mcp_server_name")
+    private Set<String> mcpServerNames = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {
@@ -79,19 +78,19 @@ public class Application {
         this.modelProvider = modelProvider;
     }
 
-    public Set<McpServer> getMcpServers() {
-        return mcpServers;
+    public Set<String> getMcpServerNames() {
+        return mcpServerNames;
     }
 
-    public void setMcpServers(Set<McpServer> mcpServers) {
-        this.mcpServers = mcpServers;
+    public void setMcpServerNames(Set<String> mcpServerNames) {
+        this.mcpServerNames = mcpServerNames;
     }
 
-    public void addMcpServer(McpServer mcpServer) {
-        this.mcpServers.add(mcpServer);
+    public void addMcpServerName(String mcpServerName) {
+        this.mcpServerNames.add(mcpServerName);
     }
 
-    public void removeMcpServer(McpServer mcpServer) {
-        this.mcpServers.remove(mcpServer);
+    public void removeMcpServerName(String mcpServerName) {
+        this.mcpServerNames.remove(mcpServerName);
     }
 }

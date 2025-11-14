@@ -4,14 +4,15 @@ Application for building AI capable applications on the fly with UI, models and 
 
 ## Overview
 
-Spawn is a Spring Boot application that enables you to configure, build, and deploy new AI applications built on the Spring Boot / Spring AI framework. The application provides a RESTful API to manage applications, AI models, and MCP (Model Context Protocol) servers.
+Spawn is a Spring Boot application that enables you to configure, build, and deploy new AI applications built on the Spring Boot / Spring AI framework. The application provides a web-based UI with server-side rendered HTML pages to manage applications, AI models, and MCP (Model Context Protocol) servers.
 
 ## Main Workflow
 
-1. **Create a new application** with a name (you can create many)
-2. **Decide which model you want to use** (e.g., OpenAI)
-3. **Choose a set of MCP servers** you want to bundle with the model
-4. **Build and deploy** a new application based on the configuration
+1. **Browse available models** - View the list of AI models loaded from CSV (e.g., OpenAI, Anthropic Claude, Azure OpenAI)
+2. **Browse available MCP servers** - View the list of MCP servers loaded from CSV (e.g., GitHub, Notion, Stripe)
+3. **Create a new application** with a name and select a model provider
+4. **Add MCP servers** to your application from the available list
+5. **Build and deploy** a new application based on the configuration
 
 ## Technology Stack
 
@@ -19,6 +20,7 @@ Spawn is a Spring Boot application that enables you to configure, build, and dep
 - Spring Boot 3.2.0
 - Spring Data JPA
 - H2 Database (in-memory)
+- J2HTML 1.6.0 (server-side HTML rendering)
 - Maven
 
 ## Getting Started
@@ -50,194 +52,84 @@ Access the H2 database console at: `http://localhost:8080/h2-console`
 - Username: `sa`
 - Password: (empty)
 
-## API Documentation
+## Web UI
 
-### Models API
+The application provides a web-based user interface with the following pages:
 
-#### Create a Model
-```bash
-POST /api/models
-Content-Type: application/json
+### Models (`/models`)
+- **Read-only list** of AI model providers loaded from `src/main/resources/models/models.csv`
+- Displays model capabilities: multimodality, tools/functions, streaming, retry, observability, etc.
+- No create, edit, or delete operations - models are configuration-only
 
-{
-  "name": "GPT-4",
-  "type": "OpenAI",
-  "description": "OpenAI GPT-4 Model"
-}
-```
+### MCP Servers (`/mcp-servers`)
+- **Read-only list** of MCP servers loaded from `src/main/resources/mcp/mcp_servers.csv`
+- Displays server icons and descriptions
+- Includes 48+ servers from the GitHub MCP registry (GitHub, Notion, Stripe, etc.)
+- No create, edit, or delete operations - servers are configuration-only
 
-#### Get All Models
-```bash
-GET /api/models
-```
+### Applications (`/applications`)
+- **Full CRUD operations** for AI applications
+- Create applications with a name and model provider
+- View, edit, and delete applications
+- Add/remove MCP servers from applications
+- Each application stores:
+  - Name
+  - Model provider (reference to CSV)
+  - Set of MCP server names (references to CSV)
+  - Creation timestamp
 
-#### Get Model by ID
-```bash
-GET /api/models/{id}
-```
+## Data Architecture
 
-#### Update Model
-```bash
-PUT /api/models/{id}
-Content-Type: application/json
+### CSV-Based Configuration (Read-Only)
 
-{
-  "name": "GPT-4",
-  "type": "OpenAI",
-  "description": "Updated description"
-}
-```
+**Models** and **MCP Servers** are loaded from CSV files at application startup:
 
-#### Delete Model
-```bash
-DELETE /api/models/{id}
-```
+- **Models CSV** (`src/main/resources/models/models.csv`):
+  - Columns: Provider, Multimodality, Tools/Functions, Streaming, Retry, Observability, Built-in JSON, Local, OpenAI API Compatible
+  - Example: `OpenAI,"In: text, image, audio Out: text, audio",yes,yes,yes,yes,yes,no,yes`
 
-### MCP Servers API
+- **MCP Servers CSV** (`src/main/resources/mcp/mcp_servers.csv`):
+  - Columns: Name, Icon, Description
+  - Example: `GitHub,https://avatars.githubusercontent.com/u/9919?v=4,"Official GitHub MCP Server..."`
 
-#### Create an MCP Server
-```bash
-POST /api/mcp-servers
-Content-Type: application/json
+### Database Entities (CRUD)
 
-{
-  "name": "FileSystem MCP",
-  "url": "http://localhost:8080/mcp/filesystem",
-  "description": "MCP Server for file system operations"
-}
-```
-
-#### Get All MCP Servers
-```bash
-GET /api/mcp-servers
-```
-
-#### Get MCP Server by ID
-```bash
-GET /api/mcp-servers/{id}
-```
-
-#### Update MCP Server
-```bash
-PUT /api/mcp-servers/{id}
-Content-Type: application/json
-
-{
-  "name": "FileSystem MCP",
-  "url": "http://localhost:8080/mcp/filesystem",
-  "description": "Updated description"
-}
-```
-
-#### Delete MCP Server
-```bash
-DELETE /api/mcp-servers/{id}
-```
-
-### Applications API
-
-#### Create an Application
-```bash
-POST /api/applications
-Content-Type: application/json
-
-{
-  "name": "My AI Application",
-  "modelId": 1
-}
-```
-
-#### Get All Applications
-```bash
-GET /api/applications
-```
-
-#### Get Application by ID
-```bash
-GET /api/applications/{id}
-```
-
-#### Update Application
-```bash
-PUT /api/applications/{id}
-Content-Type: application/json
-
-{
-  "name": "Updated Application Name",
-  "modelId": 1
-}
-```
-
-#### Delete Application
-```bash
-DELETE /api/applications/{id}
-```
-
-#### Add MCP Server to Application
-```bash
-POST /api/applications/{applicationId}/mcp-servers/{mcpServerId}
-```
-
-#### Remove MCP Server from Application
-```bash
-DELETE /api/applications/{applicationId}/mcp-servers/{mcpServerId}
-```
+**Applications** are stored in the H2 database:
+- Application name
+- Model provider name (validated against CSV)
+- Collection of MCP server names (validated against CSV)
+- Creation timestamp
 
 ## Example Workflow
 
-Here's a complete example of creating an AI application with a model and MCP servers:
+Using the web UI:
 
-```bash
-# 1. Create a model
-curl -X POST http://localhost:8080/api/models \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "GPT-4",
-    "type": "OpenAI",
-    "description": "OpenAI GPT-4 Model"
-  }'
+1. **View Available Models**
+   - Navigate to `http://localhost:8080/models`
+   - Browse the list of available AI model providers
 
-# Response: {"id":1,"name":"GPT-4","type":"OpenAI","description":"OpenAI GPT-4 Model"}
+2. **View Available MCP Servers**
+   - Navigate to `http://localhost:8080/mcp-servers`
+   - Browse the list of available MCP servers with descriptions
 
-# 2. Create MCP servers
-curl -X POST http://localhost:8080/api/mcp-servers \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "FileSystem MCP",
-    "url": "http://localhost:8080/mcp/filesystem",
-    "description": "File system operations"
-  }'
+3. **Create an Application**
+   - Navigate to `http://localhost:8080/applications`
+   - Click "Create New Application"
+   - Enter application name: "My AI Assistant"
+   - Select model provider: "OpenAI"
+   - Click "Save"
 
-# Response: {"id":1,"name":"FileSystem MCP","url":"http://localhost:8080/mcp/filesystem","description":"File system operations"}
+4. **Add MCP Servers**
+   - Click "View" on your application
+   - Select an MCP server from the dropdown (e.g., "GitHub")
+   - Click "Add Server"
+   - Repeat to add more servers
 
-curl -X POST http://localhost:8080/api/mcp-servers \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Database MCP",
-    "url": "http://localhost:8080/mcp/database",
-    "description": "Database operations"
-  }'
-
-# Response: {"id":2,"name":"Database MCP","url":"http://localhost:8080/mcp/database","description":"Database operations"}
-
-# 3. Create an application with the model
-curl -X POST http://localhost:8080/api/applications \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "My AI Assistant",
-    "modelId": 1
-  }'
-
-# Response: {"id":1,"name":"My AI Assistant","createdAt":"2025-11-12T23:49:43.334897","model":{...},"mcpServers":[]}
-
-# 4. Add MCP servers to the application
-curl -X POST http://localhost:8080/api/applications/1/mcp-servers/1
-
-curl -X POST http://localhost:8080/api/applications/1/mcp-servers/2
-
-# 5. Get the complete application configuration
-curl http://localhost:8080/api/applications/1
-```
+5. **View Application Configuration**
+   - The application detail page shows:
+     - Application details (ID, name, model provider, created date)
+     - Associated MCP servers with icons and descriptions
+     - Option to add/remove servers
 
 ## Testing
 
@@ -247,56 +139,66 @@ mvn test
 ```
 
 The test suite includes:
-- Unit tests for all controllers
-- Integration tests for the complete workflow
+- Controller integration tests for all domains
+- Service tests for CSV loading
 - End-to-end workflow test demonstrating the full application lifecycle
+- All tests use MockMvc for controller testing
 
 ## Project Structure
 
 ```
 src/
 ├── main/
-│   ├── java/com/teggr/spawn/
+│   ├── java/dev/rebelcraft/ai/spawn/
 │   │   ├── SpawnApplication.java          # Main application class
-│   │   ├── controller/                    # REST controllers
-│   │   │   ├── ApplicationController.java
-│   │   │   ├── ModelController.java
-│   │   │   ├── McpServerController.java
-│   │   │   └── GlobalExceptionHandler.java
-│   │   ├── dto/                           # Data Transfer Objects
-│   │   │   ├── ApplicationRequest.java
-│   │   │   ├── ApplicationResponse.java
-│   │   │   ├── ModelRequest.java
-│   │   │   ├── ModelResponse.java
-│   │   │   ├── McpServerRequest.java
-│   │   │   └── McpServerResponse.java
-│   │   ├── model/                         # JPA entities
-│   │   │   ├── Application.java
-│   │   │   ├── Model.java
-│   │   │   └── McpServer.java
-│   │   ├── repository/                    # Spring Data repositories
-│   │   │   ├── ApplicationRepository.java
-│   │   │   ├── ModelRepository.java
-│   │   │   └── McpServerRepository.java
-│   │   └── service/                       # Business logic
-│   │       ├── ApplicationService.java
-│   │       ├── ModelService.java
-│   │       ├── McpServerService.java
-│   │       └── ResourceNotFoundException.java
+│   │   ├── apps/                          # Applications domain
+│   │   │   ├── Application.java           # JPA entity
+│   │   │   ├── ApplicationController.java # Web controller
+│   │   │   ├── ApplicationService.java    # Business logic
+│   │   │   ├── ApplicationRepository.java # Spring Data repository
+│   │   │   ├── ApplicationRequest.java    # DTO
+│   │   │   ├── ApplicationResponse.java   # DTO
+│   │   │   ├── ApplicationFormPage.java   # J2HTML view
+│   │   │   ├── ApplicationDetailPage.java # J2HTML view
+│   │   │   └── ApplicationsListPage.java  # J2HTML view
+│   │   ├── models/                        # Models domain (read-only CSV)
+│   │   │   ├── Model.java                 # Plain POJO
+│   │   │   ├── ModelController.java       # Web controller
+│   │   │   ├── ModelService.java          # CSV loader
+│   │   │   ├── ModelResponse.java         # DTO
+│   │   │   └── ModelsListPage.java        # J2HTML view
+│   │   ├── mcp/                           # MCP Servers domain (read-only CSV)
+│   │   │   ├── McpServer.java             # Plain POJO
+│   │   │   ├── McpServerController.java   # Web controller
+│   │   │   ├── McpServerService.java      # CSV loader
+│   │   │   ├── McpServerResponse.java     # DTO
+│   │   │   └── McpServersListPage.java    # J2HTML view
+│   │   ├── web/                           # Cross-cutting web concerns
+│   │   │   ├── IndexController.java       # Home page
+│   │   │   └── view/                      # Shared view components
+│   │   ├── utils/                         # Utilities
+│   │   │   └── ResourceNotFoundException.java
+│   │   └── config/                        # Configuration
 │   └── resources/
-│       └── application.properties         # Application configuration
+│       ├── application.properties         # Application configuration
+│       ├── models/
+│       │   └── models.csv                 # AI model providers
+│       └── mcp/
+│           └── mcp_servers.csv            # MCP servers
 └── test/
-    └── java/com/teggr/spawn/              # Test classes
+    └── java/dev/rebelcraft/ai/spawn/      # Test classes
 ```
 
 ## Database Schema
 
-The application uses an in-memory H2 database with the following entities:
+The application uses an in-memory H2 database with the following schema:
 
 - **applications**: Stores AI application configurations
-- **models**: Stores AI model definitions (e.g., OpenAI, Claude)
-- **mcp_servers**: Stores MCP server definitions
-- **application_mcp_servers**: Junction table for many-to-many relationship
+  - id, name, model_provider, created_at
+- **application_mcp_servers**: Stores MCP server names for each application
+  - application_id, mcp_server_name
+
+**Note**: Models and MCP servers are NOT stored in the database. They are loaded from CSV files at startup.
 
 ## License
 

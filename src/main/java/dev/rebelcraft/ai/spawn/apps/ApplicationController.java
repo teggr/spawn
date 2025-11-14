@@ -68,12 +68,12 @@ public class ApplicationController {
         List<McpServerResponse> allServers = mcpServerService.getAllMcpServers();
         
         // Filter out servers that are already associated
-        Set<Long> associatedServerIds = app.getMcpServers() != null ? 
-            app.getMcpServers().stream().map(McpServerResponse::getId).collect(Collectors.toSet()) :
+        Set<String> associatedServerNames = app.getMcpServers() != null ? 
+            app.getMcpServers().stream().map(McpServerResponse::getName).collect(Collectors.toSet()) :
             Set.of();
         
         List<McpServerResponse> availableServers = allServers.stream()
-            .filter(server -> !associatedServerIds.contains(server.getId()))
+            .filter(server -> !associatedServerNames.contains(server.getName()))
             .collect(Collectors.toList());
         
         model.addAttribute("application", app);
@@ -123,15 +123,15 @@ public class ApplicationController {
 
     @PostMapping("/{applicationId}/mcp-servers/add")
     public String addMcpServer(@PathVariable Long applicationId,
-                              @RequestParam Long mcpServerId) {
-        applicationService.addMcpServerToApplication(applicationId, mcpServerId);
+                              @RequestParam String mcpServerName) {
+        applicationService.addMcpServerToApplication(applicationId, mcpServerName);
         return "redirect:/applications/" + applicationId;
     }
 
-    @PostMapping("/{applicationId}/mcp-servers/{mcpServerId}/remove")
+    @PostMapping("/{applicationId}/mcp-servers/{mcpServerName}/remove")
     public String removeMcpServer(@PathVariable Long applicationId,
-                                 @PathVariable Long mcpServerId) {
-        applicationService.removeMcpServerFromApplication(applicationId, mcpServerId);
+                                 @PathVariable String mcpServerName) {
+        applicationService.removeMcpServerFromApplication(applicationId, mcpServerName);
         return "redirect:/applications/" + applicationId;
     }
 }
