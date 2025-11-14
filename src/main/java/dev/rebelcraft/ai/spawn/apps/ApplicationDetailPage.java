@@ -1,7 +1,6 @@
 package dev.rebelcraft.ai.spawn.apps;
 
 import dev.rebelcraft.ai.spawn.agents.AgentResponse;
-import dev.rebelcraft.ai.spawn.mcp.McpServerResponse;
 import dev.rebelcraft.ai.spawn.models.ModelResponse;
 import dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout;
 import dev.rebelcraft.ai.spawn.web.view.PageView;
@@ -11,7 +10,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -52,9 +50,7 @@ public class ApplicationDetailPage extends PageView {
         h3("Associated Models"),
         modelsSectionReadOnly(app),
         h3(attrs(".mt-4"), "Associated Agents"),
-        agentsSectionReadOnly(app),
-        h3(attrs(".mt-4"), "Associated MCP Servers"),
-        mcpServersSectionReadOnly(app)
+        agentsSectionReadOnly(app)
       )
     );
   }
@@ -108,34 +104,6 @@ public class ApplicationDetailPage extends PageView {
           )
         ) :
         div(attrs(".alert.alert-info"), "No agents associated with this application.")
-    );
-  }
-
-  private ContainerTag<?> mcpServersSectionReadOnly(ApplicationResponse app) {
-    Set<McpServerResponse> currentServers = app.getMcpServers();
-
-    return div(
-      currentServers != null && !currentServers.isEmpty() ?
-        table(
-          attrs(".table.table-striped.mb-4"),
-          thead(
-            tr(
-              th("Name"),
-              th("Icon"),
-              th("Description")
-            )
-          ),
-          tbody(
-            each(currentServers, server -> tr(
-              td(server.getName()),
-              td(
-                img(attrs(".rounded-circle")).withSrc(server.getIcon()).withAlt(server.getName() + " logo").withStyle("width: 32px; height: 32px;")
-              ),
-              td(server.getDescription() != null ? server.getDescription() : "")
-            ))
-          )
-        ) :
-        div(attrs(".alert.alert-info"), "No MCP servers associated with this application.")
     );
   }
 

@@ -2,7 +2,6 @@ package dev.rebelcraft.ai.spawn.apps;
 
 import dev.rebelcraft.ai.spawn.agents.AgentResponse;
 import dev.rebelcraft.ai.spawn.agents.AgentService;
-import dev.rebelcraft.ai.spawn.mcp.McpServerResponse;
 import dev.rebelcraft.ai.spawn.mcp.McpServerService;
 import dev.rebelcraft.ai.spawn.models.ModelResponse;
 import dev.rebelcraft.ai.spawn.models.ModelService;
@@ -10,7 +9,6 @@ import dev.rebelcraft.ai.spawn.utils.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -174,30 +172,6 @@ public class ApplicationService {
         return toResponse(updatedApplication);
     }
 
-    public ApplicationResponse addMcpServerToApplication(Long applicationId, String mcpServerName) {
-        Application application = applicationRepository.findById(applicationId)
-            .orElseThrow(() -> new ResourceNotFoundException("Application not found with id: " + applicationId));
-        
-        // Validate that the MCP server exists in CSV
-        Optional<McpServerResponse> mcpServer = mcpServerService.getMcpServerByName(mcpServerName);
-        if (mcpServer.isEmpty()) {
-            throw new IllegalArgumentException("MCP Server not found: " + mcpServerName);
-        }
-        
-        application.addMcpServerName(mcpServerName);
-        Application updatedApplication = applicationRepository.save(application);
-        return toResponse(updatedApplication);
-    }
-
-    public ApplicationResponse removeMcpServerFromApplication(Long applicationId, String mcpServerName) {
-        Application application = applicationRepository.findById(applicationId)
-            .orElseThrow(() -> new ResourceNotFoundException("Application not found with id: " + applicationId));
-        
-        application.removeMcpServerName(mcpServerName);
-        Application updatedApplication = applicationRepository.save(application);
-        return toResponse(updatedApplication);
-    }
-
     private ApplicationResponse toResponse(Application application) {
         ApplicationResponse response = new ApplicationResponse(
             application.getId(),
@@ -225,16 +199,6 @@ public class ApplicationService {
                 .map(Optional::get)
                 .collect(Collectors.toSet());
             response.setAgents(agents);
-        }
-        
-        // Convert MCP server names to McpServerResponse objects
-        if (application.getMcpServerNames() != null && !application.getMcpServerNames().isEmpty()) {
-            Set<McpServerResponse> mcpServers = application.getMcpServerNames().stream()
-                .map(name -> mcpServerService.getMcpServerByName(name))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toSet());
-            response.setMcpServers(mcpServers);
         }
         
         return response;

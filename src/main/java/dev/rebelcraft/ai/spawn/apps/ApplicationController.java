@@ -97,20 +97,10 @@ public class ApplicationController {
         List<AgentResponse> availableAgents = allAgents.stream()
             .filter(a -> !associatedAgentNames.contains(a.getName()))
             .collect(Collectors.toList());
-        
-        // Get all available MCP servers and filter out associated ones
-        List<McpServerResponse> allServers = mcpServerService.getAllMcpServers();
-        Set<String> associatedServerNames = app.getMcpServers() != null ? 
-            app.getMcpServers().stream().map(McpServerResponse::getName).collect(Collectors.toSet()) :
-            Set.of();
-        List<McpServerResponse> availableServers = allServers.stream()
-            .filter(server -> !associatedServerNames.contains(server.getName()))
-            .collect(Collectors.toList());
-        
+
         model.addAttribute("application", app);
         model.addAttribute("availableModels", availableModels);
         model.addAttribute("availableAgents", availableAgents);
-        model.addAttribute("availableServers", availableServers);
         return "applicationDetailPage";
     }
 
@@ -194,20 +184,6 @@ public class ApplicationController {
     public String removeAgent(@PathVariable Long applicationId,
                              @PathVariable String agentName) {
         applicationService.removeAgentFromApplication(applicationId, agentName);
-        return "redirect:/applications/" + applicationId;
-    }
-
-    @PostMapping("/{applicationId}/mcp-servers/add")
-    public String addMcpServer(@PathVariable Long applicationId,
-                              @RequestParam String mcpServerName) {
-        applicationService.addMcpServerToApplication(applicationId, mcpServerName);
-        return "redirect:/applications/" + applicationId;
-    }
-
-    @PostMapping("/{applicationId}/mcp-servers/{mcpServerName}/remove")
-    public String removeMcpServer(@PathVariable Long applicationId,
-                                 @PathVariable String mcpServerName) {
-        applicationService.removeMcpServerFromApplication(applicationId, mcpServerName);
         return "redirect:/applications/" + applicationId;
     }
 }

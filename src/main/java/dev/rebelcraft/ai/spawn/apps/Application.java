@@ -2,6 +2,7 @@ package dev.rebelcraft.ai.spawn.apps;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,14 +37,6 @@ public class Application {
     )
     @Column(name = "agent_name")
     private Set<String> agentNames = new HashSet<>();
-
-    @ElementCollection
-    @CollectionTable(
-        name = "application_mcp_servers",
-        joinColumns = @JoinColumn(name = "application_id")
-    )
-    @Column(name = "mcp_server_name")
-    private Set<String> mcpServerNames = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {
@@ -115,19 +108,4 @@ public class Application {
         this.agentNames.remove(agentName);
     }
 
-    public Set<String> getMcpServerNames() {
-        return mcpServerNames;
-    }
-
-    public void setMcpServerNames(Set<String> mcpServerNames) {
-        this.mcpServerNames = mcpServerNames;
-    }
-
-    public void addMcpServerName(String mcpServerName) {
-        this.mcpServerNames.add(mcpServerName);
-    }
-
-    public void removeMcpServerName(String mcpServerName) {
-        this.mcpServerNames.remove(mcpServerName);
-    }
 }

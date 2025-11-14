@@ -55,7 +55,6 @@ public class ApplicationsListPage extends PageView {
           th("Name"),
           th("Models"),
           th("Agents"),
-          th("MCP Servers"),
           th("Created At"),
           th("Actions")
         )
@@ -66,7 +65,6 @@ public class ApplicationsListPage extends PageView {
           td(app.getName()),
           td(app.getModels() != null ? String.valueOf(app.getModels().size()) : "0"),
           td(app.getAgents() != null ? String.valueOf(app.getAgents().size()) : "0"),
-          td(app.getMcpServers() != null ? String.valueOf(app.getMcpServers().size()) : "0"),
           td(app.getCreatedAt() != null ? app.getCreatedAt().toString() : ""),
           td(
             a(attrs(".btn.btn-sm.btn-info.me-2"), "View")
