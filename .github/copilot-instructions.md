@@ -17,12 +17,13 @@ Spawn is a Spring Boot application that enables configuration, building, and dep
 
 ## Architecture and Project Structure
 
-The project follows a layered architecture with clear separation of concerns. Recently the code has been reorganized so domain-specific classes live in their own packages (`apps`, `mcp`, `models`) while non-domain web and utility code lives under `web` and `utils`.
+The project follows a layered architecture with clear separation of concerns. Recently the code has been reorganized so domain-specific classes live in their own packages (`apps`, `agents`, `mcp`, `models`) while non-domain web and utility code lives under `web` and `utils`.
 
 ```
 src/main/java/dev/rebelcraft/ai/spawn/
 ├── SpawnApplication.java          # Main Spring Boot application
 ├── apps/                          # Domain: applications (controllers, services, repos, dto, views)
+├── agents/                        # Domain: agents (controllers, services, repos, dto, views)
 ├── mcp/                           # Domain: MCP servers (controllers, services, repos, dto, views)
 ├── models/                        # Domain: models (controllers, services, dto, views - READ-ONLY from CSV)
 ├── web/                           # Non-domain web concerns (IndexController, GlobalExceptionHandler, site-wide controllers)
@@ -33,7 +34,7 @@ src/main/java/dev/rebelcraft/ai/spawn/
 
 ### Layer Responsibilities
 
-- **Domain packages (apps / mcp / models)**: Each domain package contains its own controllers, services, repositories, DTOs, and view classes related to that domain. Keeping domain code together makes it easier to reason about features and tests. **Note**: The `models` domain is read-only and loads data from CSV, so it has no repository or entity class.
+- **Domain packages (apps / agents / mcp / models)**: Each domain package contains its own controllers, services, repositories, DTOs, and view classes related to that domain. Keeping domain code together makes it easier to reason about features and tests. **Note**: The `models` domain is read-only and loads data from CSV, so it has no repository or entity class.
 - **Web**: Cross-cutting web concerns that are not specific to a single domain (index, global exception handling, site-wide controllers) live in `web`.
 - **Utils**: Shared utilities, helper classes, and Docker helper wrappers that are reused across domains live in `utils`.
 - **Views**: J2HTML-based server-side rendered HTML pages may be colocated inside each domain package (e.g., `apps.view`) or kept in a shared `view` package if pages are shared across domains.
@@ -45,27 +46,31 @@ src/main/java/dev/rebelcraft/ai/spawn/
 
 1. **Models**: Represent AI model providers (e.g., OpenAI, Anthropic Claude, Azure OpenAI) loaded from a static CSV file (`src/main/resources/models/models.csv`). Models are **read-only** and include information about capabilities like multimodality, tools/functions support, streaming, retry, observability, built-in JSON, local deployment, and OpenAI API compatibility.
 2. **MCP Servers**: Model Context Protocol servers that provide additional capabilities (e.g., file system access, database operations)
-3. **Applications**: AI application configurations that combine a model provider with zero or more MCP servers
+3. **Agents**: Represent AI agents that combine a model provider with zero or more MCP servers, along with a system prompt and description. Agents are the building blocks for applications.
+4. **Applications**: AI application configurations that are composed of one or more agents
 
 ### Entity Relationships
 
-- Application references Model by provider name (String) - not a database relationship
-- Application *many-to-many* McpServer (applications can have multiple MCP servers)
+- Agent references Model by provider name (String) - not a database relationship
+- Agent has many MCP servers (stored as Set<String> of MCP server names)
+- Application has many Agents (stored as Set<String> of agent names)
 
 ## API Design Patterns
 
 The application uses server-side rendered HTML with Spring MVC patterns:
 
-### Standard CRUD Resources (MCP Servers, Applications)
+### Standard CRUD Resources (Agents, Applications)
 - `GET /{resource}` - Display list page (returns HTML view)
 - `GET /{resource}/new` - Display creation form (returns HTML view)
 - `POST /{resource}` - Process form submission to create resource (redirect on success)
+- `GET /{resource}/{id}` - Display detail page (returns HTML view)
 - `GET /{resource}/{id}/edit` - Display edit form (returns HTML view)
 - `POST /{resource}/{id}` - Process form submission to update resource (redirect on success)
 - `POST /{resource}/{id}/delete` - Delete resource (redirect on success)
 
-### Read-Only Resources (Models)
+### Read-Only Resources (Models, MCP Servers)
 - `GET /models` - Display list page with models loaded from CSV (read-only, no create/edit/delete operations)
+- `GET /mcp-servers` - Display list page with MCP servers loaded from CSV (read-only, no create/edit/delete operations)
 
 All endpoints return HTML views rendered using J2HTML, not JSON responses.
 
@@ -123,8 +128,8 @@ mvn test -Dtest=ClassName#method   # Run specific test method
 
 - **H2 in-memory database** is used for development and testing
 - Database is automatically created on startup
-- Database stores: Applications, MCP Servers, and their relationships
-- **Models are NOT stored in the database** - they are loaded from `src/main/resources/models/models.csv`
+- Database stores: Applications, Agents, and their relationships
+- **Models and MCP Servers are NOT stored in the database** - they are loaded from CSV files in `src/main/resources/`
 - Access H2 console at `http://localhost:8080/h2-console`
   - JDBC URL: `jdbc:h2:mem:spawndb`
   - Username: `sa`
@@ -142,15 +147,53 @@ The models domain has a unique architecture compared to other domains:
 - **No Repository**: ModelService reads directly from CSV file using ClassPathResource
 - **Controller**: Only has `GET /models` endpoint to list all models
 - **View**: ModelsListPage displays all model information in a read-only table
-- **Application Integration**: Applications reference models by provider name (String field), not by database ID
+- **Agent Integration**: Agents reference models by provider name (String field), not by database ID
 
-### Working with Models
+## MCP Servers Domain (CSV-Based, Read-Only)
 
-When creating or editing applications:
+Similar to models, MCP servers are loaded from CSV:
+
+- **Data Source**: MCP servers are loaded from `src/main/resources/mcp/mcp_servers.csv` on application startup
+- **Read-Only**: No create, update, or delete operations - MCP servers can only be listed
+- **No Database**: MCP server data is not persisted in the database
+- **Agent Integration**: Agents reference MCP servers by name (Set<String>), not by database ID
+
+## Agents Domain
+
+Agents combine models and MCP servers with a system prompt:
+
+- **Database**: Agent entities are persisted in the database
+- **Model Reference**: Agents store a `modelProvider` String field that references a model from the CSV
+- **MCP Server References**: Agents store MCP server names as `Set<String>` in a collection table
+- **CRUD Operations**: Full create, read, update, delete operations available
+- **Validation**: AgentService validates that referenced model providers and MCP servers exist
+- **Form**: AgentFormPage includes model provider dropdown and MCP server multi-select
+- **Application Integration**: Applications reference agents by name (Set<String>)
+
+## Applications Domain
+
+Applications are composed of one or more agents:
+
+- **Database**: Application entities are persisted in the database
+- **Agent References**: Applications store agent names as `Set<String>` in a collection table
+- **CRUD Operations**: Full create, read, update, delete operations available
+- **Validation**: ApplicationService validates that referenced agents exist
+- **Form**: ApplicationFormPage is simple with just name field (agents are added/removed on detail page)
+- **Detail Page**: ApplicationDetailPage displays associated agents and allows adding/removing them
+
+### Working with Agents and Applications
+
+When creating or editing agents:
 - The form displays a dropdown of all available model providers from the CSV
-- Applications store the provider name as a String field (`model_provider`)
-- ApplicationService validates that the selected provider exists in the CSV
-- ApplicationResponse includes the full ModelResponse object by looking up the provider name
+- The form allows selecting multiple MCP servers from the CSV
+- Agents store the provider name as a String field (`model_provider`)
+- AgentService validates that the selected provider exists in the CSV
+
+When working with applications:
+- Applications only have a name field during creation/edit
+- Agents are added/removed on the application detail page
+- ApplicationService validates that referenced agents exist in the database
+- ApplicationResponse includes full AgentResponse objects by looking up agent names
 
 ## Development Workflow
 
