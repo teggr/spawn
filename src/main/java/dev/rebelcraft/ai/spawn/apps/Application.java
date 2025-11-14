@@ -21,8 +21,21 @@ public class Application {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @ElementCollection
+    @CollectionTable(
+        name = "application_model_providers",
+        joinColumns = @JoinColumn(name = "application_id")
+    )
     @Column(name = "model_provider")
-    private String modelProvider;
+    private Set<String> modelProviders = new HashSet<>();
+
+    @ElementCollection
+    @CollectionTable(
+        name = "application_agent_names",
+        joinColumns = @JoinColumn(name = "application_id")
+    )
+    @Column(name = "agent_name")
+    private Set<String> agentNames = new HashSet<>();
 
     @ElementCollection
     @CollectionTable(
@@ -70,12 +83,36 @@ public class Application {
         this.createdAt = createdAt;
     }
 
-    public String getModelProvider() {
-        return modelProvider;
+    public Set<String> getModelProviders() {
+        return modelProviders;
     }
 
-    public void setModelProvider(String modelProvider) {
-        this.modelProvider = modelProvider;
+    public void setModelProviders(Set<String> modelProviders) {
+        this.modelProviders = modelProviders;
+    }
+
+    public void addModelProvider(String modelProvider) {
+        this.modelProviders.add(modelProvider);
+    }
+
+    public void removeModelProvider(String modelProvider) {
+        this.modelProviders.remove(modelProvider);
+    }
+
+    public Set<String> getAgentNames() {
+        return agentNames;
+    }
+
+    public void setAgentNames(Set<String> agentNames) {
+        this.agentNames = agentNames;
+    }
+
+    public void addAgentName(String agentName) {
+        this.agentNames.add(agentName);
+    }
+
+    public void removeAgentName(String agentName) {
+        this.agentNames.remove(agentName);
     }
 
     public Set<String> getMcpServerNames() {
