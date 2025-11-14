@@ -2,6 +2,7 @@ package dev.rebelcraft.ai.spawn.models;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -9,14 +10,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class ModelService {
 
     private final List<Model> models;
+    private final ModelFavoriteRepository favoriteRepository;
 
-    public ModelService() {
+    public ModelService(ModelFavoriteRepository favoriteRepository) {
+        this.favoriteRepository = favoriteRepository;
         this.models = loadModelsFromCsv();
     }
 
@@ -81,19 +85,45 @@ public class ModelService {
     }
 
     public List<ModelResponse> getAllModels() {
+        // Get all favorites
+        Set<String> favoriteProviders = favoriteRepository.findAll().stream()
+            .map(ModelFavorite::getProvider)
+            .collect(Collectors.toSet());
+        
         return models.stream()
-            .map(this::toResponse)
+            .map(model -> toResponse(model, favoriteProviders.contains(model.getProvider())))
             .collect(Collectors.toList());
     }
 
     public Optional<ModelResponse> getModelByProvider(String provider) {
+        boolean isFavorite = favoriteRepository.existsByProvider(provider);
         return models.stream()
             .filter(model -> model.getProvider().equalsIgnoreCase(provider))
-            .map(this::toResponse)
+            .map(model -> toResponse(model, isFavorite))
             .findFirst();
     }
 
-    private ModelResponse toResponse(Model model) {
+    public void addFavorite(String provider) {
+        // Check if model exists
+        boolean modelExists = models.stream()
+            .anyMatch(model -> model.getProvider().equalsIgnoreCase(provider));
+        
+        if (!modelExists) {
+            throw new IllegalArgumentException("Model not found: " + provider);
+        }
+        
+        // Add favorite if not already exists
+        if (!favoriteRepository.existsByProvider(provider)) {
+            favoriteRepository.save(new ModelFavorite(provider));
+        }
+    }
+
+    @Transactional
+    public void removeFavorite(String provider) {
+        favoriteRepository.deleteByProvider(provider);
+    }
+
+    private ModelResponse toResponse(Model model, boolean isFavorite) {
         return new ModelResponse(
             model.getProvider(),
             model.getMultimodality(),
@@ -103,7 +133,8 @@ public class ModelService {
             model.getObservability(),
             model.getBuiltInJson(),
             model.getLocal(),
-            model.getOpenAiApiCompatible()
+            model.getOpenAiApiCompatible(),
+            isFavorite
         );
     }
 }
