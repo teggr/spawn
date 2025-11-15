@@ -66,6 +66,22 @@ The application provides a web-based user interface with the following pages:
 - Displays server icons and descriptions
 - Includes 48+ servers from the GitHub MCP registry (GitHub, Notion, Stripe, etc.)
 - No create, edit, or delete operations - servers are configuration-only
+- **View configuration templates** for MCP servers that have templates available
+
+### MCP Templates
+
+MCP server configuration templates are JSON files stored in `src/main/resources/mcp/templates/`. Templates provide pre-configured server definitions with input placeholders that can be customized for deployment. The template system supports multiple naming strategies for matching templates to servers:
+
+1. **Exact match**: Template filename matches the server name exactly (e.g., `GitHub.json` for "GitHub" server)
+2. **Case-insensitive match**: Template is found regardless of case differences
+3. **Normalized match**: Spaces and special characters are normalized to hyphens (e.g., `azure-mcp-server.json` matches "Azure MCP Server")
+
+Templates include:
+- Server configuration with placeholders using `${input:id}` syntax
+- Input definitions specifying required configuration values, types, and defaults
+- Preview capability showing templates with placeholders replaced (password fields masked with `*****`)
+
+Access templates via the "View Template" button on the MCP Servers list page for servers with available templates.
 
 ### Applications (`/applications`)
 - **Full CRUD operations** for AI applications
@@ -213,7 +229,11 @@ src/
 │   │   │   ├── McpServerController.java   # Web controller
 │   │   │   ├── McpServerService.java      # CSV loader
 │   │   │   ├── McpServerResponse.java     # DTO
-│   │   │   └── McpServersListPage.java    # J2HTML view
+│   │   │   ├── McpServersListPage.java    # J2HTML view
+│   │   │   ├── McpTemplate.java           # Template POJO
+│   │   │   ├── McpTemplateService.java    # Template loader
+│   │   │   ├── McpTemplateController.java # Template controller
+│   │   │   └── McpServerTemplatePage.java # J2HTML view
 │   │   ├── agents/                        # Agents domain
 │   │   │   ├── Agent.java                 # JPA entity
 │   │   │   ├── AgentController.java       # Web controller
@@ -235,7 +255,10 @@ src/
 │       ├── models/
 │       │   └── models.csv                 # AI model providers
 │       └── mcp/
-│           └── mcp_servers.csv            # MCP servers
+│           ├── mcp_servers.csv            # MCP servers
+│           └── templates/                 # MCP configuration templates
+│               ├── GitHub.json            # GitHub MCP template
+│               └── azure-mcp-server.json  # Azure MCP template
 └── test/
     └── java/dev/rebelcraft/ai/spawn/      # Test classes
 ```

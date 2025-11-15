@@ -1,0 +1,20 @@
+{
+  "servers": {
+    "azure": {
+      "type": "http",
+      "url": "https://azure.example.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${input:azure_token}"
+      }
+    }
+  },
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "azure_token",
+      "description": "Azure Access Token",
+      "password": true,
+      "default": ""
+    }
+  ]
+}

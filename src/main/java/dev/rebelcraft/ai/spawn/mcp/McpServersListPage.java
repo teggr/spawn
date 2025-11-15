@@ -125,7 +125,12 @@ public class McpServersListPage extends PageView {
                     .attr("formaction", "/mcp-servers/" + server.getName() + "/favorite")
                     .attr("formmethod", "post")
                     .withText("☆ Favorite")
-                )
+                ),
+              text(" "),
+              server.isTemplateAvailable() ?
+                a(attrs(".btn.btn-sm.btn-outline-info"), "📄 View Template")
+                  .withHref("/mcp-servers/" + server.getName() + "/template") :
+                text("")
             )
           ))
         )
