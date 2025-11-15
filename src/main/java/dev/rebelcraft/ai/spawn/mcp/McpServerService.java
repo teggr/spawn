@@ -18,9 +18,11 @@ public class McpServerService {
 
     private final List<McpServer> mcpServers;
     private final McpServerFavoriteRepository favoriteRepository;
+    private final McpTemplateService templateService;
 
-    public McpServerService(McpServerFavoriteRepository favoriteRepository) {
+    public McpServerService(McpServerFavoriteRepository favoriteRepository, McpTemplateService templateService) {
         this.favoriteRepository = favoriteRepository;
+        this.templateService = templateService;
         this.mcpServers = loadMcpServersFromCsv();
     }
 
@@ -118,11 +120,16 @@ public class McpServerService {
     }
 
     private McpServerResponse toResponse(McpServer server, boolean isFavorite) {
+        boolean templateAvailable = templateService.getTemplateForServer(server.getName()).isPresent();
+        String templateFilename = templateService.getTemplateFilenameForServer(server.getName()).orElse(null);
+        
         return new McpServerResponse(
             server.getName(),
             server.getIcon(),
             server.getDescription(),
-            isFavorite
+            isFavorite,
+            templateAvailable,
+            templateFilename
         );
     }
 }
