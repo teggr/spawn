@@ -1,8 +1,12 @@
+---
+mcp_server: GitHub
+description: Using a GitHub PAT
+---
 {
   "servers": {
     "github": {
       "type": "http",
-      "url": "${input:github_api_base}mcp/",
+      "url": "https://api.githubcopilot.com/mcp/",
       "headers": {
         "Authorization": "Bearer ${input:github_mcp_pat}"
       }
@@ -13,15 +17,7 @@
       "type": "promptString",
       "id": "github_mcp_pat",
       "description": "GitHub Personal Access Token",
-      "password": true,
-      "default": ""
-    },
-    {
-      "type": "promptString",
-      "id": "github_api_base",
-      "description": "GitHub API base URL",
-      "password": false,
-      "default": "https://api.githubcopilot.com/"
+      "password": true
     }
   ]
 }

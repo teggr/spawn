@@ -127,9 +127,9 @@ public class McpServersListPage extends PageView {
                     .withText("☆ Favorite")
                 ),
               text(" "),
-              server.isTemplateAvailable() ?
-                a(attrs(".btn.btn-sm.btn-outline-info"), "📄 View Template")
-                  .withHref("/mcp-servers/" + server.getName() + "/template") :
+              server.hasConfigurations() ?
+                a(attrs(".btn.btn-sm.btn-outline-info"), "View")
+                  .withHref("/mcp-servers/" + server.getName()) :
                 text("")
             )
           ))

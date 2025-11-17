@@ -1,4 +1,4 @@
-package dev.rebelcraft.ai.spawn.mcp;
+package dev.rebelcraft.ai.spawn.mcp.templates;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

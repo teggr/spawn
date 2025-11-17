@@ -7,7 +7,6 @@ public class McpServerResponse {
     private String description;
     private boolean favorite;
     private boolean templateAvailable;
-    private String templateFilename;
 
     // Constructors
     public McpServerResponse() {
@@ -26,13 +25,12 @@ public class McpServerResponse {
         this.favorite = favorite;
     }
 
-    public McpServerResponse(String name, String icon, String description, boolean favorite, boolean templateAvailable, String templateFilename) {
+    public McpServerResponse(String name, String icon, String description, boolean favorite, boolean templateAvailable) {
         this.name = name;
         this.icon = icon;
         this.description = description;
         this.favorite = favorite;
         this.templateAvailable = templateAvailable;
-        this.templateFilename = templateFilename;
     }
 
     // Getters and Setters
@@ -68,7 +66,7 @@ public class McpServerResponse {
         this.favorite = favorite;
     }
 
-    public boolean isTemplateAvailable() {
+    public boolean hasConfigurations() {
         return templateAvailable;
     }
 
@@ -76,11 +74,4 @@ public class McpServerResponse {
         this.templateAvailable = templateAvailable;
     }
 
-    public String getTemplateFilename() {
-        return templateFilename;
-    }
-
-    public void setTemplateFilename(String templateFilename) {
-        this.templateFilename = templateFilename;
-    }
 }

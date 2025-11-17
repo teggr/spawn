@@ -1,6 +1,6 @@
 package dev.rebelcraft.ai.spawn.mcp;
 
-import dev.rebelcraft.ai.spawn.mcp.templates.McpTemplateService;
+import dev.rebelcraft.ai.spawn.mcp.templates.McpServerExampleConfigurationsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,9 +14,9 @@ public class McpServerService {
 
     private final McpServerRepository mcpServerRepository;
     private final McpServerFavoriteRepository favoriteRepository;
-    private final McpTemplateService templateService;
+    private final McpServerExampleConfigurationsService templateService;
 
-    public McpServerService(McpServerRepository mcpServerRepository, McpServerFavoriteRepository favoriteRepository, McpTemplateService templateService) {
+    public McpServerService(McpServerRepository mcpServerRepository, McpServerFavoriteRepository favoriteRepository, McpServerExampleConfigurationsService templateService) {
         this.mcpServerRepository = mcpServerRepository;
         this.favoriteRepository = favoriteRepository;
         this.templateService = templateService;
@@ -59,16 +59,12 @@ public class McpServerService {
     }
 
     private McpServerResponse toResponse(McpServer server, boolean isFavorite) {
-        boolean templateAvailable = templateService.getTemplateForServer(server.getName()).isPresent();
-        String templateFilename = templateService.getTemplateFilenameForServer(server.getName()).orElse(null);
-
         return new McpServerResponse(
             server.getName(),
             server.getIcon(),
             server.getDescription(),
             isFavorite,
-            templateAvailable,
-            templateFilename
+            templateService.hasExamples(server.getName())
         );
     }
 }
