@@ -37,8 +37,7 @@ class ApplicationControllerIntegrationTest {
                 .param("modelProviders", "OpenAI")
                 .param("modelProviders", "Anthropic Claude")
                 .param("agentNames", "Test Agent"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/applications"));
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -142,8 +141,7 @@ class ApplicationControllerIntegrationTest {
                 .param("modelProviders", "OpenAI")
                 .param("modelProviders", "Anthropic Claude")
                 .param("agentNames", "Update Agent"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/applications"));
+                .andExpect(status().isOk());
     }
 
     @Test

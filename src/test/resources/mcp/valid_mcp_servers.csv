@@ -1,0 +1,5 @@
+name,icon,description
+Quoted,fa-star,"Has, comma in description"
+DBServer,fa-database,Provides database access
+LocalFS,fa-folder,Provides filesystem access
+

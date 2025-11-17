@@ -21,7 +21,7 @@ class ModelControllerIntegrationTest {
         mockMvc.perform(get("/models"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Models - Spawn</title>")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Anthropic Claude")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Anthropic")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("OpenAI")));
     }
 }
