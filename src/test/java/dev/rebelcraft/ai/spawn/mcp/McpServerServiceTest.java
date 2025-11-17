@@ -15,7 +15,7 @@ import static org.mockito.Mockito.*;
 class McpServerServiceTest {
 
     // Use a real repository instance to avoid mocking issues on newer JDKs
-    private McpRepository mcpRepository;
+    private McpServerRepository mcpServerRepository;
 
     private McpServerFavoriteRepository favoriteRepository;
 
@@ -28,10 +28,10 @@ class McpServerServiceTest {
 
     @BeforeEach
     void setup() {
-        mcpRepository = new McpRepository(List.of(sample1, sample2));
+        mcpServerRepository = new McpServerRepository(List.of(sample1, sample2));
         favoriteRepository = mock(McpServerFavoriteRepository.class);
         templateService = new StubTemplateService();
-        service = new McpServerService(mcpRepository, favoriteRepository, templateService);
+        service = new McpServerService(mcpServerRepository, favoriteRepository, templateService);
     }
 
     @Test

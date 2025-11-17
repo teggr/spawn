@@ -11,12 +11,12 @@ import java.util.stream.Collectors;
 @Service
 public class McpServerService {
 
-    private final McpRepository mcpRepository;
+    private final McpServerRepository mcpServerRepository;
     private final McpServerFavoriteRepository favoriteRepository;
     private final McpTemplateService templateService;
 
-    public McpServerService(McpRepository mcpRepository, McpServerFavoriteRepository favoriteRepository, McpTemplateService templateService) {
-        this.mcpRepository = mcpRepository;
+    public McpServerService(McpServerRepository mcpServerRepository, McpServerFavoriteRepository favoriteRepository, McpTemplateService templateService) {
+        this.mcpServerRepository = mcpServerRepository;
         this.favoriteRepository = favoriteRepository;
         this.templateService = templateService;
     }
@@ -27,20 +27,20 @@ public class McpServerService {
             .map(McpServerFavorite::getServerName)
             .collect(Collectors.toSet());
 
-        return mcpRepository.getAll().stream()
+        return mcpServerRepository.getAll().stream()
             .map(server -> toResponse(server, favoriteNames.contains(server.getName())))
             .collect(Collectors.toList());
     }
 
     public Optional<McpServerResponse> getMcpServerByName(String name) {
         boolean isFavorite = favoriteRepository.existsByServerName(name);
-        return mcpRepository.findByName(name)
+        return mcpServerRepository.findByName(name)
             .map(server -> toResponse(server, isFavorite));
     }
 
     public void addFavorite(String serverName) {
         // Check if server exists
-        boolean serverExists = mcpRepository.existsByName(serverName);
+        boolean serverExists = mcpServerRepository.existsByName(serverName);
 
         if (!serverExists) {
             throw new IllegalArgumentException("MCP server not found: " + serverName);

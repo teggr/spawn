@@ -6,11 +6,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class McpRepositoryTest {
+class McpServerRepositoryTest {
 
     @Test
     void loadValidCsv_returnsAllServers() {
-        McpRepository repo = new McpRepository("mcp/valid_mcp_servers.csv");
+        McpServerRepository repo = new McpServerRepository("mcp/valid_mcp_servers.csv");
         List<McpServer> servers = repo.getAll();
         assertEquals(3, servers.size());
 
@@ -27,7 +27,7 @@ class McpRepositoryTest {
 
     @Test
     void malformedCsv_skipsMalformedLines() {
-        McpRepository repo = new McpRepository("mcp/malformed_mcp_servers.csv");
+        McpServerRepository repo = new McpServerRepository("mcp/malformed_mcp_servers.csv");
         List<McpServer> servers = repo.getAll();
         // The malformed file should result in zero valid servers parsed
         assertEquals(0, servers.size());
@@ -35,7 +35,7 @@ class McpRepositoryTest {
 
     @Test
     void findByName_isCaseInsensitiveAndTrimmed() {
-        McpRepository repo = new McpRepository("mcp/valid_mcp_servers.csv");
+        McpServerRepository repo = new McpServerRepository("mcp/valid_mcp_servers.csv");
         assertTrue(repo.existsByName("localfs"));
         assertTrue(repo.existsByName(" LocalFS "));
         assertTrue(repo.findByName("dbserver").isPresent());
@@ -43,6 +43,6 @@ class McpRepositoryTest {
 
     @Test
     void missingCsv_throwsRuntimeException() {
-        assertThrows(RuntimeException.class, () -> new McpRepository("mcp/does_not_exist.csv"));
+        assertThrows(RuntimeException.class, () -> new McpServerRepository("mcp/does_not_exist.csv"));
     }
 }

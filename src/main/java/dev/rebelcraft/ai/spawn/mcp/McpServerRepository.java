@@ -13,25 +13,25 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class McpRepository {
+public class McpServerRepository {
 
     private final List<McpServer> mcpServers;
 
-    public McpRepository() {
+    public McpServerRepository() {
         this("mcp/mcp_servers.csv");
     }
 
     /**
      * Test-friendly constructor that allows pointing at a different classpath resource.
      */
-    public McpRepository(String classpathResource) {
+    public McpServerRepository(String classpathResource) {
         this.mcpServers = loadMcpServersFromCsv(classpathResource);
     }
 
     /**
      * Test-only constructor that allows supplying servers directly (avoids file I/O).
      */
-    protected McpRepository(List<McpServer> servers) {
+    protected McpServerRepository(List<McpServer> servers) {
         this.mcpServers = Collections.unmodifiableList(new ArrayList<>(servers));
     }
 
