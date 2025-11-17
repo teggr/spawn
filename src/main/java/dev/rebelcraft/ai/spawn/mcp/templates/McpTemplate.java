@@ -1,4 +1,4 @@
-package dev.rebelcraft.ai.spawn.mcp;
+package dev.rebelcraft.ai.spawn.mcp.templates;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

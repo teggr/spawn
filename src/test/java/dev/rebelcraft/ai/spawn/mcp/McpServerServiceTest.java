@@ -1,5 +1,7 @@
 package dev.rebelcraft.ai.spawn.mcp;
 
+import dev.rebelcraft.ai.spawn.mcp.templates.McpTemplate;
+import dev.rebelcraft.ai.spawn.mcp.templates.McpTemplateService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

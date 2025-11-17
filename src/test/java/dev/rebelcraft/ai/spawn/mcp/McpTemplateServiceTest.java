@@ -1,6 +1,8 @@
 package dev.rebelcraft.ai.spawn.mcp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.rebelcraft.ai.spawn.mcp.templates.McpTemplate;
+import dev.rebelcraft.ai.spawn.mcp.templates.McpTemplateService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

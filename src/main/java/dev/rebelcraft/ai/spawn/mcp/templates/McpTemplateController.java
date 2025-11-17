@@ -1,5 +1,7 @@
-package dev.rebelcraft.ai.spawn.mcp;
+package dev.rebelcraft.ai.spawn.mcp.templates;
 
+import dev.rebelcraft.ai.spawn.mcp.McpServerResponse;
+import dev.rebelcraft.ai.spawn.mcp.McpServerService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;

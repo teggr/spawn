@@ -1,5 +1,6 @@
 package dev.rebelcraft.ai.spawn.mcp;
 
+import dev.rebelcraft.ai.spawn.mcp.templates.McpTemplateService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,7 +1,6 @@
-package dev.rebelcraft.ai.spawn.mcp;
+package dev.rebelcraft.ai.spawn.mcp.templates;
 
 import dev.rebelcraft.ai.spawn.web.view.PageView;
-import j2html.tags.ContainerTag;
 import j2html.tags.DomContent;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
