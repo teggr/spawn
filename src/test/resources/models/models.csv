@@ -1,0 +1,5 @@
+Provider,Multimodality,Tools/Functions,Streaming,Retry,Observability,Built-in JSON,Local,OpenAI API Compatible
+OpenAI,"In: text, image, audio Out: text, audio",yes,yes,yes,yes,yes,no,yes
+Anthropic,"In: text Out: text",no,no,no,no,no,no,no
+CustomModel,"In: text Out: text",no,no,no,no,no,yes,no
+
