@@ -21,7 +21,7 @@ public class AgentDetailPage extends PageView {
 
         return createPage(
             "Agent - " + (agent != null ? agent.getName() : "") + " - Spawn",
-            ACTIVATE_APPS_NAV_LINK,
+            ACTIVATE_AGENTS_NAV_LINK,
             each(
                 div(attrs(".container.mt-4"),
 
