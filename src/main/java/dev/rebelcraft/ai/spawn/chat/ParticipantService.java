@@ -1,10 +1,13 @@
 package dev.rebelcraft.ai.spawn.chat;
 
+import java.util.List;
 import java.util.Map;
 
 public interface ParticipantService {
 
     Participant createParticipant(String name, String avatarUrl, String role);
+
+    List<Participant> getAllParticipants();
 
     Participant getParticipant(String participantId);
 

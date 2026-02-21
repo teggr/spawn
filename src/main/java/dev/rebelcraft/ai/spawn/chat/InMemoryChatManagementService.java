@@ -38,6 +38,24 @@ public class InMemoryChatManagementService implements ChatManagementService {
     }
 
     @Override
+    public List<Chat> getAllChats() {
+        return new ArrayList<>(store.values());
+    }
+
+    @Override
+    public Optional<Chat> findChatByParticipants(List<String> participantIds) {
+        List<String> sorted = new ArrayList<>(participantIds);
+        java.util.Collections.sort(sorted);
+        return store.values().stream()
+                .filter(chat -> {
+                    List<String> chatSorted = new ArrayList<>(chat.getParticipantIds());
+                    java.util.Collections.sort(chatSorted);
+                    return chatSorted.equals(sorted);
+                })
+                .findFirst();
+    }
+
+    @Override
     public boolean deleteChat(String chatId) {
         return store.remove(chatId) != null;
     }

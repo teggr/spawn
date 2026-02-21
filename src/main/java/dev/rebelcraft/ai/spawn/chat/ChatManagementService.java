@@ -9,6 +9,10 @@ public interface ChatManagementService {
 
     Optional<Chat> getChat(String chatId);
 
+    List<Chat> getAllChats();
+
+    Optional<Chat> findChatByParticipants(List<String> participantIds);
+
     boolean deleteChat(String chatId);
 
     boolean addParticipantToChat(String chatId, Participant participant);
