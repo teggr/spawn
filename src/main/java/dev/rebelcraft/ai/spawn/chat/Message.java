@@ -1,48 +1,81 @@
 package dev.rebelcraft.ai.spawn.chat;
 
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "messages")
 public class Message {
 
-    private String id;
-    private String chatId;
-    private String authorId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chat_id")
+    private Chat chat;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "author_id")
+    private Participant author;
+
+    @Transient
+    private String pendingAuthorId;
+
+    @Lob
     private String content;
+
+    @Column(name = "timestamp_sent")
     private LocalDateTime timestampSent;
 
     public Message() { }
 
     public Message(String id, String chatId, String authorId, String content,
                    LocalDateTime timestampSent) {
-        this.id = id;
-        this.chatId = chatId;
-        this.authorId = authorId;
+        this.pendingAuthorId = authorId;
         this.content = content;
         this.timestampSent = timestampSent;
     }
 
     public String getId() {
+        return id != null ? id.toString() : null;
+    }
+
+    public Long getLongId() {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public Chat getChat() {
+        return chat;
+    }
+
+    public void setChat(Chat chat) {
+        this.chat = chat;
     }
 
     public String getChatId() {
-        return chatId;
+        return chat != null ? chat.getId() : null;
     }
 
-    public void setChatId(String chatId) {
-        this.chatId = chatId;
+    public Participant getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(Participant author) {
+        this.author = author;
     }
 
     public String getAuthorId() {
-        return authorId;
+        return author != null ? author.getId() : pendingAuthorId;
     }
 
     public void setAuthorId(String authorId) {
-        this.authorId = authorId;
+        this.pendingAuthorId = authorId;
+    }
+
+    public String getPendingAuthorId() {
+        return pendingAuthorId;
     }
 
     public String getContent() {
