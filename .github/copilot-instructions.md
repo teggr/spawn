@@ -17,12 +17,13 @@ Spawn is a Spring Boot application that enables configuration, building, and dep
 
 ## Architecture and Project Structure
 
-The project follows a layered architecture with clear separation of concerns. Recently the code has been reorganized so domain-specific classes live in their own packages (`apps`, `mcp`, `models`) while non-domain web and utility code lives under `web` and `utils`.
+The project follows a layered architecture with clear separation of concerns. Recently the code has been reorganized so domain-specific classes live in their own packages (`apps`, `mcp`, `models`, `chat`) while non-domain web and utility code lives under `web` and `utils`.
 
 ```
 src/main/java/dev/rebelcraft/ai/spawn/
 ├── SpawnApplication.java          # Main Spring Boot application
 ├── apps/                          # Domain: applications (controllers, services, repos, dto, views)
+├── chat/                          # Domain: chat (participants, messages, chat management services)
 ├── mcp/                           # Domain: MCP servers (controllers, services, repos, dto, views)
 ├── models/                        # Domain: models (controllers, services, dto, views - READ-ONLY from CSV)
 ├── web/                           # Non-domain web concerns (IndexController, GlobalExceptionHandler, site-wide controllers)
@@ -33,7 +34,7 @@ src/main/java/dev/rebelcraft/ai/spawn/
 
 ### Layer Responsibilities
 
-- **Domain packages (apps / mcp / models)**: Each domain package contains its own controllers, services, repositories, DTOs, and view classes related to that domain. Keeping domain code together makes it easier to reason about features and tests. **Note**: The `models` domain is read-only and loads data from CSV, so it has no repository or entity class.
+- **Domain packages (apps / mcp / models / chat)**: Each domain package contains its own controllers, services, repositories, DTOs, and view classes related to that domain. Keeping domain code together makes it easier to reason about features and tests. **Note**: The `models` domain is read-only and loads data from CSV, so it has no repository or entity class.
 - **Web**: Cross-cutting web concerns that are not specific to a single domain (index, global exception handling, site-wide controllers) live in `web`.
 - **Utils**: Shared utilities, helper classes, and Docker helper wrappers that are reused across domains live in `utils`.
 - **Views**: J2HTML-based server-side rendered HTML pages may be colocated inside each domain package (e.g., `apps.view`) or kept in a shared `view` package if pages are shared across domains.
@@ -47,6 +48,9 @@ src/main/java/dev/rebelcraft/ai/spawn/
 2. **Agents**: Expert agents with system prompts and optional MCP server associations that can be assigned to applications. Agents are stored in the database and can be created, updated, and deleted through CRUD operations.
 3. **MCP Servers**: Model Context Protocol servers that provide additional capabilities (e.g., file system access, database operations)
 4. **Applications**: AI application configurations that combine multiple model providers, multiple agents, and zero or more MCP servers
+5. **Chats**: Chat sessions composed of participants and messages, managed via in-memory services for creation, message delivery, and last-seen tracking.
+6. **Participants**: Chat participants with a name, avatar URL, and role; stored in memory and referenced by ID inside chats and messages.
+7. **Messages**: Chat messages tied to a chat and author, with content and timestamp; stored in memory and paged when listed.
 
 ### Entity Relationships
 
@@ -54,6 +58,8 @@ src/main/java/dev/rebelcraft/ai/spawn/
 - Application references Agents by agent names (Set<String>) - not a database relationship
 - Application *many-to-many* McpServer (applications can have multiple MCP servers stored as Set<String>)
 - Agent *many-to-many* McpServer (agents can have multiple MCP servers stored as Set<String>)
+- Chat references Participants by ID (List<String>) and Messages by ID (List<String>)
+- Message references a Chat by ID and a Participant by author ID
 
 ## API Design Patterns
 
@@ -157,7 +163,7 @@ When creating or editing applications:
 
 ## Development Workflow
 
-1. Create or modify entities and corresponding controllers, services, repositories, DTOs and views inside the appropriate domain package: `apps/`, `mcp/`, or `models/`.
+1. Create or modify entities and corresponding controllers, services, repositories, DTOs and views inside the appropriate domain package: `apps/`, `mcp/`, `models/`, or `chat/`.
    - **Exception**: For `models/`, remember it's read-only and CSV-based with no repository or entity.
 2. Place cross-cutting web controllers and site-wide handlers in `web/` (e.g. `IndexController`, `GlobalExceptionHandler`).
 3. Add shared utilities and Docker helpers in `utils/` (or `docker/` if you prefer a dedicated docker package).
