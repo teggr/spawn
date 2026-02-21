@@ -102,4 +102,57 @@ class InMemoryChatManagementServiceTest {
         boolean result = chatManagementService.removeParticipantFromChat("nonexistent-id", "some-id");
         assertThat(result).isFalse();
     }
+
+    @Test
+    void shouldMarkLastSeenMessage() {
+        Participant alice = participantService.createParticipant("Alice", null, null);
+        Chat chat = chatManagementService.createChat(List.of(alice));
+
+        boolean marked = chatManagementService.markLastSeenMessage(chat.getId(), alice.getId(), "msg-42");
+
+        assertThat(marked).isTrue();
+        assertThat(chatManagementService.getLastSeenMessageId(chat.getId(), alice.getId()))
+                .isPresent()
+                .hasValue("msg-42");
+    }
+
+    @Test
+    void shouldUpdateLastSeenMessageForParticipant() {
+        Participant alice = participantService.createParticipant("Alice", null, null);
+        Chat chat = chatManagementService.createChat(List.of(alice));
+
+        chatManagementService.markLastSeenMessage(chat.getId(), alice.getId(), "msg-1");
+        chatManagementService.markLastSeenMessage(chat.getId(), alice.getId(), "msg-5");
+
+        assertThat(chatManagementService.getLastSeenMessageId(chat.getId(), alice.getId()))
+                .hasValue("msg-5");
+    }
+
+    @Test
+    void shouldReturnFalseWhenMarkingLastSeenForNonexistentChat() {
+        boolean result = chatManagementService.markLastSeenMessage("nonexistent-id", "some-participant", "some-msg");
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    void shouldReturnFalseWhenMarkingLastSeenForNonParticipant() {
+        Participant alice = participantService.createParticipant("Alice", null, null);
+        Chat chat = chatManagementService.createChat(List.of(alice));
+
+        boolean result = chatManagementService.markLastSeenMessage(chat.getId(), "non-participant-id", "some-msg");
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    void shouldReturnEmptyLastSeenMessageWhenNoneSet() {
+        Participant alice = participantService.createParticipant("Alice", null, null);
+        Chat chat = chatManagementService.createChat(List.of(alice));
+
+        assertThat(chatManagementService.getLastSeenMessageId(chat.getId(), alice.getId())).isEmpty();
+    }
+
+    @Test
+    void shouldReturnEmptyLastSeenMessageForNonexistentChat() {
+        assertThat(chatManagementService.getLastSeenMessageId("nonexistent-id", "some-participant")).isEmpty();
+    }
 }

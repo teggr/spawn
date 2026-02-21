@@ -9,18 +9,16 @@ public class Message {
     private String authorId;
     private String content;
     private LocalDateTime timestampSent;
-    private MessageStatus status;
 
     public Message() { }
 
     public Message(String id, String chatId, String authorId, String content,
-                   LocalDateTime timestampSent, MessageStatus status) {
+                   LocalDateTime timestampSent) {
         this.id = id;
         this.chatId = chatId;
         this.authorId = authorId;
         this.content = content;
         this.timestampSent = timestampSent;
-        this.status = status;
     }
 
     public String getId() {
@@ -61,13 +59,5 @@ public class Message {
 
     public void setTimestampSent(LocalDateTime timestampSent) {
         this.timestampSent = timestampSent;
-    }
-
-    public MessageStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(MessageStatus status) {
-        this.status = status;
     }
 }

@@ -13,11 +13,13 @@ public class Chat {
     private List<String> messageIds;
     private LocalDateTime timestampCreated;
     private Map<String, String> metadata;
+    private Map<String, String> lastSeenMessageIds;
 
     public Chat() {
         this.participantIds = new ArrayList<>();
         this.messageIds = new ArrayList<>();
         this.metadata = new HashMap<>();
+        this.lastSeenMessageIds = new HashMap<>();
     }
 
     public Chat(String id, List<String> participantIds, List<String> messageIds,
@@ -27,6 +29,7 @@ public class Chat {
         this.messageIds = messageIds != null ? messageIds : new ArrayList<>();
         this.timestampCreated = timestampCreated;
         this.metadata = metadata != null ? metadata : new HashMap<>();
+        this.lastSeenMessageIds = new HashMap<>();
     }
 
     public String getId() {
@@ -67,5 +70,13 @@ public class Chat {
 
     public void setMetadata(Map<String, String> metadata) {
         this.metadata = metadata;
+    }
+
+    public Map<String, String> getLastSeenMessageIds() {
+        return lastSeenMessageIds;
+    }
+
+    public void setLastSeenMessageIds(Map<String, String> lastSeenMessageIds) {
+        this.lastSeenMessageIds = lastSeenMessageIds;
     }
 }

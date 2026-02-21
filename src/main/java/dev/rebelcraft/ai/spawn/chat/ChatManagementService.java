@@ -14,4 +14,8 @@ public interface ChatManagementService {
     boolean addParticipantToChat(String chatId, Participant participant);
 
     boolean removeParticipantFromChat(String chatId, String participantId);
+
+    boolean markLastSeenMessage(String chatId, String participantId, String messageId);
+
+    Optional<String> getLastSeenMessageId(String chatId, String participantId);
 }

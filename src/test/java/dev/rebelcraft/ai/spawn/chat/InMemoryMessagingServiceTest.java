@@ -28,7 +28,7 @@ class InMemoryMessagingServiceTest {
         Participant alice = participantService.createParticipant("Alice", null, null);
         Chat chat = chatManagementService.createChat(List.of(alice));
 
-        Message message = new Message(null, null, alice.getId(), "Hello!", LocalDateTime.now(), MessageStatus.UNREAD);
+        Message message = new Message(null, null, alice.getId(), "Hello!", LocalDateTime.now());
         boolean sent = messagingService.sendMessage(chat.getId(), message);
 
         assertThat(sent).isTrue();
@@ -39,7 +39,7 @@ class InMemoryMessagingServiceTest {
 
     @Test
     void shouldReturnFalseWhenSendingMessageToNonexistentChat() {
-        Message message = new Message(null, null, "author-id", "Hello!", LocalDateTime.now(), null);
+        Message message = new Message(null, null, "author-id", "Hello!", LocalDateTime.now());
         boolean result = messagingService.sendMessage("nonexistent-id", message);
         assertThat(result).isFalse();
     }
@@ -49,8 +49,8 @@ class InMemoryMessagingServiceTest {
         Participant bob = participantService.createParticipant("Bob", null, null);
         Chat chat = chatManagementService.createChat(List.of(bob));
 
-        messagingService.sendMessage(chat.getId(), new Message(null, null, bob.getId(), "Msg 1", LocalDateTime.now(), null));
-        messagingService.sendMessage(chat.getId(), new Message(null, null, bob.getId(), "Msg 2", LocalDateTime.now(), null));
+        messagingService.sendMessage(chat.getId(), new Message(null, null, bob.getId(), "Msg 1", LocalDateTime.now()));
+        messagingService.sendMessage(chat.getId(), new Message(null, null, bob.getId(), "Msg 2", LocalDateTime.now()));
 
         List<Message> messages = messagingService.getMessages(chat.getId(), new PaginationOptions(0, 10));
         assertThat(messages).hasSize(2);
@@ -63,7 +63,7 @@ class InMemoryMessagingServiceTest {
         Chat chat = chatManagementService.createChat(List.of(carol));
 
         for (int i = 1; i <= 5; i++) {
-            messagingService.sendMessage(chat.getId(), new Message(null, null, carol.getId(), "Msg " + i, LocalDateTime.now(), null));
+            messagingService.sendMessage(chat.getId(), new Message(null, null, carol.getId(), "Msg " + i, LocalDateTime.now()));
         }
 
         List<Message> page0 = messagingService.getMessages(chat.getId(), new PaginationOptions(0, 3));
@@ -84,7 +84,7 @@ class InMemoryMessagingServiceTest {
         Participant dave = participantService.createParticipant("Dave", null, null);
         Chat chat = chatManagementService.createChat(List.of(dave));
 
-        Message message = new Message(null, null, dave.getId(), "Original", LocalDateTime.now(), null);
+        Message message = new Message(null, null, dave.getId(), "Original", LocalDateTime.now());
         messagingService.sendMessage(chat.getId(), message);
 
         Message updated = messagingService.updateMessage(message.getId(), "Updated content");
@@ -102,7 +102,7 @@ class InMemoryMessagingServiceTest {
         Participant eve = participantService.createParticipant("Eve", null, null);
         Chat chat = chatManagementService.createChat(List.of(eve));
 
-        Message message = new Message(null, null, eve.getId(), "To be deleted", LocalDateTime.now(), null);
+        Message message = new Message(null, null, eve.getId(), "To be deleted", LocalDateTime.now());
         messagingService.sendMessage(chat.getId(), message);
         String messageId = message.getId();
 

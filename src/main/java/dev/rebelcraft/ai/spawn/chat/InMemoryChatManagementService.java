@@ -62,4 +62,23 @@ public class InMemoryChatManagementService implements ChatManagementService {
         }
         return chat.getParticipantIds().remove(participantId);
     }
+
+    @Override
+    public boolean markLastSeenMessage(String chatId, String participantId, String messageId) {
+        Chat chat = store.get(chatId);
+        if (chat == null || !chat.getParticipantIds().contains(participantId)) {
+            return false;
+        }
+        chat.getLastSeenMessageIds().put(participantId, messageId);
+        return true;
+    }
+
+    @Override
+    public Optional<String> getLastSeenMessageId(String chatId, String participantId) {
+        Chat chat = store.get(chatId);
+        if (chat == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(chat.getLastSeenMessageIds().get(participantId));
+    }
 }
