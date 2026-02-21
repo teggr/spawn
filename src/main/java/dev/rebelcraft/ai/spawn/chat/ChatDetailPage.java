@@ -7,8 +7,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static dev.rebelcraft.ai.spawn.chat.ChatListPage.*;
 import static dev.rebelcraft.ai.spawn.web.view.DefaultPageLayout.*;
@@ -51,8 +53,8 @@ public class ChatDetailPage extends PageView {
                                                 : text("Chat")
                                 ),
                                 // Messages area
-                                div().withStyle("flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;").with(
-                                        messages != null ? each(messages, m -> messageItem(m, currentUserId, otherParticipant)) : text("")
+                                div().withStyle("flex:1;overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;").with(
+                                        messages != null ? each(groupMessages(messages), g -> messageGroup(g, currentUserId, otherParticipant)) : text("")
                                 ),
                                 // Input area
                                 div().withStyle("flex:0 0 auto;padding:12px 16px;border-top:1px solid #e0e0e0;").with(
@@ -95,22 +97,42 @@ public class ChatDetailPage extends PageView {
                 );
     }
 
-    private DomContent messageItem(Message message, String currentUserId, Participant otherParticipant) {
-        boolean isCurrentUser = message.getAuthorId().equals(currentUserId);
-        String timeStr = message.getTimestampSent() != null
-                ? message.getTimestampSent().format(TIME_FMT) : "";
-        String align = isCurrentUser ? "align-items:flex-end;" : "align-items:flex-start;";
-        String bubbleBg = isCurrentUser ? "background:#007a5a;color:#fff;" : "background:#f0f0f0;color:#222;";
+    private List<List<Message>> groupMessages(List<Message> messages) {
+        List<List<Message>> groups = new ArrayList<>();
+        if (messages == null || messages.isEmpty()) return groups;
+        List<Message> currentGroup = new ArrayList<>();
+        String currentAuthorId = null;
+        for (Message m : messages) {
+            if (!Objects.equals(m.getAuthorId(), currentAuthorId)) {
+                if (!currentGroup.isEmpty()) {
+                    groups.add(currentGroup);
+                }
+                currentGroup = new ArrayList<>();
+                currentAuthorId = m.getAuthorId();
+            }
+            currentGroup.add(m);
+        }
+        if (!currentGroup.isEmpty()) {
+            groups.add(currentGroup);
+        }
+        return groups;
+    }
+
+    private DomContent messageGroup(List<Message> group, String currentUserId, Participant otherParticipant) {
+        Message first = group.get(0);
+        boolean isCurrentUser = first.getAuthorId().equals(currentUserId);
         String authorName = isCurrentUser ? "You"
                 : (otherParticipant != null ? otherParticipant.getName() : "?");
-
-        return div().withStyle("display:flex;flex-direction:column;" + align).with(
-                div().withStyle("display:flex;align-items:center;gap:6px;margin-bottom:2px;").with(
-                        isCurrentUser ? text("") : avatar(authorName, 30),
-                        small(timeStr).withStyle("color:#888;font-size:0.78rem;")
-                ),
-                div().withStyle("max-width:60%;padding:8px 12px;border-radius:8px;" + bubbleBg + "font-size:0.95rem;").with(
-                        text(message.getContent())
+        String timeStr = first.getTimestampSent() != null
+                ? first.getTimestampSent().format(TIME_FMT) : "";
+        return div().withStyle("display:flex;gap:12px;padding:4px 16px;margin-bottom:4px;").with(
+                div().withStyle("flex:0 0 36px;").with(avatar(authorName, 36)),
+                div().withStyle("flex:1;min-width:0;").with(
+                        div().withStyle("display:flex;align-items:baseline;gap:8px;margin-bottom:2px;").with(
+                                span(authorName).withStyle("font-weight:bold;font-size:0.9rem;color:#1d1c1d;"),
+                                span(timeStr).withStyle("font-size:0.75rem;color:#888;")
+                        ),
+                        each(group, m -> div(text(m.getContent())).withStyle("font-size:0.95rem;color:#1d1c1d;padding:1px 0;"))
                 )
         );
     }
