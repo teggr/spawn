@@ -43,11 +43,11 @@ public class DefaultPageLayout {
         a(attrs(".navbar-brand"), "Spawn").withHref("/"),
         div(
           attrs(".navbar-nav"),
+          a(attrs(ACTIVATE_CHAT_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Chat").withHref("/chat"),
           a(attrs(ACTIVATE_MODELS_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Models").withHref("/models"),
           a(attrs(ACTIVATE_MCP_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "MCP Servers").withHref("/mcp-servers"),
           a(attrs(ACTIVATE_AGENTS_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Agents").withHref("/agents"),
-          a(attrs(ACTIVATE_APPS_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Applications").withHref("/applications"),
-          a(attrs(ACTIVATE_CHAT_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Chat").withHref("/chat")
+          a(attrs(ACTIVATE_APPS_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Applications").withHref("/applications")
         )
       )
     );
