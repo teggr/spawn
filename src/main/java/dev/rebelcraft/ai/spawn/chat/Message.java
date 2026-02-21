@@ -12,8 +12,8 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chat_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "CHANNEL_ID", nullable = false)
     private Chat chat;
 
     @ManyToOne(fetch = FetchType.EAGER)
