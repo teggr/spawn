@@ -1,8 +1,15 @@
 package dev.rebelcraft.ai.spawn.chat;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "participants")
 public class Participant {
 
-    private String id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private String name;
     private String avatarUrl;
     private String role;
@@ -10,18 +17,17 @@ public class Participant {
     public Participant() { }
 
     public Participant(String id, String name, String avatarUrl, String role) {
-        this.id = id;
         this.name = name;
         this.avatarUrl = avatarUrl;
         this.role = role;
     }
 
     public String getId() {
-        return id;
+        return id != null ? id.toString() : null;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public Long getLongId() {
+        return id;
     }
 
     public String getName() {

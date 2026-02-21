@@ -28,7 +28,7 @@ public class ChatController {
 
     @GetMapping
     public String listChats(Model model) {
-        String currentUserId = InMemoryParticipantService.CURRENT_USER_ID;
+        String currentUserId = JpaParticipantService.CURRENT_USER_ID;
         List<Participant> allParticipants = participantService.getAllParticipants();
         List<Participant> others = allParticipants.stream()
                 .filter(p -> !p.getId().equals(currentUserId))
@@ -44,7 +44,7 @@ public class ChatController {
 
     @GetMapping("/dm/{participantId}")
     public String directMessage(@PathVariable String participantId) {
-        String currentUserId = InMemoryParticipantService.CURRENT_USER_ID;
+        String currentUserId = JpaParticipantService.CURRENT_USER_ID;
         List<String> ids = new ArrayList<>();
         ids.add(currentUserId);
         ids.add(participantId);
@@ -63,7 +63,7 @@ public class ChatController {
 
     @GetMapping("/{chatId}")
     public String chatDetail(@PathVariable String chatId, Model model) {
-        String currentUserId = InMemoryParticipantService.CURRENT_USER_ID;
+        String currentUserId = JpaParticipantService.CURRENT_USER_ID;
         Optional<Chat> chatOpt = chatManagementService.getChat(chatId);
         if (chatOpt.isEmpty()) {
             return "redirect:/chat";
@@ -97,7 +97,7 @@ public class ChatController {
     @PostMapping("/{chatId}/messages")
     public String sendMessage(@PathVariable String chatId,
                               @RequestParam String content) {
-        String currentUserId = InMemoryParticipantService.CURRENT_USER_ID;
+        String currentUserId = JpaParticipantService.CURRENT_USER_ID;
         Message message = new Message(null, chatId, currentUserId, content, LocalDateTime.now());
         messagingService.sendMessage(chatId, message);
         return "redirect:/chat/" + chatId;
