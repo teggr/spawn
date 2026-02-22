@@ -126,6 +126,7 @@ public class ResourceController {
 
 - `@RequestParam` - Extract form field values from POST requests
 - `@PathVariable` - Extract values from URI path (e.g., `/resources/{id}`)
+- `@RequestHeader(value = "HX-Request", required = false)` - Detect HTMX requests (header is present on all HTMX-initiated requests)
 - `Model` - Spring MVC model object for passing attributes to views
 
 ## Return Values and Redirects
@@ -141,8 +142,10 @@ Controllers return view names (Strings) instead of ResponseEntity:
 | Update (success) | Redirect | `return "redirect:/resources";` |
 | Update (error) | View name | `return "resourceFormPage";` |
 | Delete | Redirect | `return "redirect:/resources";` |
+| HTMX fragment GET | Fragment view name | `return "resourceFragment";` |
+| HTMX-aware POST | Fragment or redirect | See HTMX-Aware POST section below |
 
-**Post-Redirect-Get Pattern**: Always redirect after successful POST operations to prevent form resubmission.
+**Post-Redirect-Get Pattern**: Always redirect after successful POST operations to prevent form resubmission. When the request is from HTMX (detected via `HX-Request` header), return a fragment view name instead of redirecting.
 
 ## Dependency Injection
 
@@ -328,6 +331,51 @@ public String removeChild(@PathVariable Long parentId,
 }
 ```
 
+## HTMX-Aware Endpoints
+
+### Fragment GET Endpoints
+
+Fragment endpoints return partial HTML (no full page layout) for HTMX to swap into the DOM. Name the view `{resource}Fragment` and create a corresponding `{Resource}Fragment` view class that extends `PageView` but does **not** call `DefaultPageLayout.createPage(...)`.
+
+```java
+@GetMapping("/{chatId}/details")
+public String chatDetails(@PathVariable String chatId, Model model) {
+    Optional<Chat> chatOpt = chatManagementService.getChat(chatId);
+    if (chatOpt.isEmpty()) {
+        return "redirect:/chat";
+    }
+    // populate model ...
+    return "chatDetailsFragment";  // resolves to ChatDetailsFragment bean
+}
+```
+
+### HTMX-Aware POST (Fragment or Redirect)
+
+Detect HTMX requests via the optional `HX-Request` request header. Return a fragment view name for HTMX requests; redirect for standard form submissions.
+
+```java
+@PostMapping("/{chatId}/messages")
+public String sendMessage(@PathVariable String chatId,
+                          @RequestParam String content,
+                          @RequestHeader(value = "HX-Request", required = false) String htmxRequest,
+                          Model model) {
+    // ... process the request ...
+    if (htmxRequest != null) {
+        // populate model with updated data for the fragment
+        return "chatMessagesFragment";
+    }
+    return "redirect:/chat/" + chatId;
+}
+```
+
+### HTMX Controller Responsibilities
+
+✅ Controllers SHOULD:
+- Use `@RequestHeader(value = "HX-Request", required = false)` to detect HTMX requests
+- Return fragment view names for HTMX requests
+- Still redirect for non-HTMX POST requests (Post-Redirect-Get)
+- Extract shared model-population logic into private helper methods when multiple endpoints share it
+
 ## Naming Conventions
 
 - Controller class name: `{EntityName}Controller`
@@ -358,7 +406,7 @@ See existing controllers for reference:
 
 ## When Creating New Controllers
 
-1. Create a new class in `src/main/java/com/teggr/spawn/controller/`
+1. Create a new class in `src/main/java/dev/rebelcraft/ai/spawn/{domain}/`
 2. Add `@Controller` and `@RequestMapping` annotations
 3. Inject required service using constructor injection
 4. Implement CRUD endpoints following the standard pattern
@@ -375,10 +423,11 @@ See existing controllers for reference:
 
 Before completing a controller:
 - ✅ Constructor-based dependency injection used
-- ✅ All parameters properly annotated (`@PathVariable`, `@RequestParam`)
+- ✅ All parameters properly annotated (`@PathVariable`, `@RequestParam`, `@RequestHeader` where needed)
 - ✅ Correct HTTP methods used (GET for display, POST for mutations)
 - ✅ View names or redirects returned (not ResponseEntity)
-- ✅ Post-Redirect-Get pattern followed
+- ✅ Post-Redirect-Get pattern followed for non-HTMX POST requests
+- ✅ HTMX POST returns fragment view name when `HX-Request` header is present
 - ✅ Exceptions caught and errors added to model
 - ✅ No business logic in controller
 - ✅ No direct repository access
