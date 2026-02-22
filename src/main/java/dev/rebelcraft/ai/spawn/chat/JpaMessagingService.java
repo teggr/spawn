@@ -4,12 +4,16 @@ import dev.rebelcraft.ai.spawn.utils.ResourceNotFoundException;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 @Primary
 @Service
@@ -19,13 +23,16 @@ public class JpaMessagingService implements MessagingService {
     private final MessageRepository messageRepository;
     private final ChatRepository chatRepository;
     private final ParticipantRepository participantRepository;
+    private final ParticipantService participantService;
 
     public JpaMessagingService(MessageRepository messageRepository,
                                ChatRepository chatRepository,
-                               ParticipantRepository participantRepository) {
+                               ParticipantRepository participantRepository,
+                               ParticipantService participantService) {
         this.messageRepository = messageRepository;
         this.chatRepository = chatRepository;
         this.participantRepository = participantRepository;
+        this.participantService = participantService;
     }
 
     @Override
@@ -56,7 +63,70 @@ public class JpaMessagingService implements MessagingService {
 
         message.setChat(chat);
         messageRepository.save(message);
+
+        // TEMPORARY: Trigger echo responses if message is from current user
+        if (authorId != null && authorId.equals(JpaParticipantService.CURRENT_USER_ID)) {
+            sendEchoResponses(chatId, message.getContent(), authorId);
+        }
+
         return true;
+    }
+
+    // TEMPORARY: Echo response for demo - remove when real AI integration is added
+    @Async("chatResponseExecutor")
+    public void sendEchoResponses(String chatId, String originalMessage, String originalAuthorId) {
+        try {
+            // Random delay between 1-3 seconds for more realistic feel
+            Random random = new Random();
+            int delaySeconds = 1 + random.nextInt(3);
+            TimeUnit.SECONDS.sleep(delaySeconds);
+
+            // Get the chat and all participants
+            Optional<Chat> chatOpt = chatRepository.findById(Long.parseLong(chatId));
+            if (chatOpt.isEmpty()) {
+                return;
+            }
+            Chat chat = chatOpt.get();
+
+            // Get current user name for personalized response
+            String currentUserName = "there"; // fallback
+            try {
+                Participant currentUser = participantService.getParticipant(originalAuthorId);
+                currentUserName = currentUser.getName();
+            } catch (Exception e) {
+                // Use fallback name
+            }
+
+            // Send echo from all other participants (not the original author)
+            for (String participantId : chat.getParticipantIds()) {
+                if (!participantId.equals(originalAuthorId)) {
+                    try {
+                        Participant responder = participantService.getParticipant(participantId);
+
+                        // Create echo message
+                        String echoContent = String.format("Hey %s... i got the message - %s",
+                                currentUserName, originalMessage);
+                        Message echoMessage = new Message(null, chatId, participantId,
+                                echoContent, LocalDateTime.now());
+                        echoMessage.setAuthor(responder);
+                        echoMessage.setChat(chat);
+                        messageRepository.save(echoMessage);
+
+                        // Small delay between multiple participants responding
+                        if (chat.getParticipantIds().size() > 2) {
+                            TimeUnit.MILLISECONDS.sleep(500 + random.nextInt(1000));
+                        }
+                    } catch (Exception e) {
+                        // Continue with other participants if one fails
+                    }
+                }
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            // Log error but don't fail the original request
+            System.err.println("Error sending echo response: " + e.getMessage());
+        }
     }
 
     @Override
