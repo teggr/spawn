@@ -21,7 +21,8 @@ public class DefaultPageLayout {
         meta().attr("name", "viewport").attr("content", "width=device-width, initial-scale=1"),
         title(title),
         link().withRel("stylesheet")
-          .withHref("https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
+          .withHref("https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"),
+        script().withSrc("https://unpkg.com/htmx.org@1.9.10")
       ),
       body(
         navbar(activeNavLink),
@@ -40,14 +41,14 @@ public class DefaultPageLayout {
       attrs(".navbar.navbar-expand-lg.navbar-dark.bg-dark"),
       div(
         attrs(".container-fluid"),
-        a(attrs(".navbar-brand"), "Spawn").withHref("/"),
+        a(attrs(".navbar-brand"), "Spawn").withHref("/").attr("hx-boost", "true"),
         div(
           attrs(".navbar-nav"),
-          a(attrs(ACTIVATE_CHAT_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Chat").withHref("/chat"),
-          a(attrs(ACTIVATE_MODELS_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Models").withHref("/models"),
-          a(attrs(ACTIVATE_MCP_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "MCP Servers").withHref("/mcp-servers"),
-          a(attrs(ACTIVATE_AGENTS_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Agents").withHref("/agents"),
-          a(attrs(ACTIVATE_APPS_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Applications").withHref("/applications")
+          a(attrs(ACTIVATE_CHAT_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Chat").withHref("/chat").attr("hx-boost", "true"),
+          a(attrs(ACTIVATE_MODELS_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Models").withHref("/models").attr("hx-boost", "true"),
+          a(attrs(ACTIVATE_MCP_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "MCP Servers").withHref("/mcp-servers").attr("hx-boost", "true"),
+          a(attrs(ACTIVATE_AGENTS_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Agents").withHref("/agents").attr("hx-boost", "true"),
+          a(attrs(ACTIVATE_APPS_NAV_LINK.equals(activeNavLink) ? ".nav-link.active" : ".nav-link"), "Applications").withHref("/applications").attr("hx-boost", "true")
         )
       )
     );

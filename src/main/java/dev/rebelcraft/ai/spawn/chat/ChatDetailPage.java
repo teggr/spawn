@@ -44,7 +44,7 @@ public class ChatDetailPage extends PageView {
                 ACTIVATE_CHAT_NAV_LINK,
                 div().withStyle("display:flex;height:calc(100vh - 80px);margin:-1.5rem -12px 0;").with(
                         sidebarWithActive(participants, chatId, chats),
-                        div().withStyle("flex:1;display:flex;flex-direction:column;background:#fff;").with(
+                        div().withId("chat-content").withStyle("flex:1;display:flex;flex-direction:column;background:#fff;").with(
                                 // Header
                                 div().withStyle("padding:16px;border-bottom:1px solid #e0e0e0;font-weight:bold;font-size:1.1rem;").with(
                                         otherParticipant != null
@@ -53,12 +53,16 @@ public class ChatDetailPage extends PageView {
                                                 : text("Chat")
                                 ),
                                 // Messages area
-                                div().withStyle("flex:1;overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;").with(
+                                div().withId("messages-container").withStyle("flex:1;overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;").with(
                                         messages != null ? each(groupMessages(messages), g -> messageGroup(g, currentUserId, otherParticipant)) : text("")
                                 ),
                                 // Input area
                                 div().withStyle("flex:0 0 auto;padding:12px 16px;border-top:1px solid #e0e0e0;").with(
-                                        form().attr("method", "post").attr("action", "/chat/" + chatId + "/messages").with(
+                                        form().attr("method", "post").attr("action", "/chat/" + chatId + "/messages")
+                                                .attr("hx-post", "/chat/" + chatId + "/messages")
+                                                .attr("hx-target", "#messages-container")
+                                                .attr("hx-swap", "outerHTML")
+                                                .attr("hx-on::after-request", "this.reset()").with(
                                                 div().withStyle("display:flex;gap:8px;").with(
                                                         textarea()
                                                                 .attr("name", "content")
@@ -87,17 +91,33 @@ public class ChatDetailPage extends PageView {
     }
 
     private DomContent participantItemWithActive(Participant participant, String activeChatId, List<Chat> chats) {
-        boolean active = chats != null && chats.stream().anyMatch(c ->
-                c.getId().equals(activeChatId) && c.getParticipantIds().contains(participant.getId()));
+        String chatId = chats != null ? chats.stream()
+                .filter(c -> c.getParticipantIds().contains(participant.getId()))
+                .map(Chat::getId)
+                .findFirst()
+                .orElse(null) : null;
+        boolean active = chatId != null && chatId.equals(activeChatId);
         String bg = active ? "background-color:#1164a3;" : "";
-        return a().withHref("/chat/dm/" + participant.getId())
-                .withStyle("display:flex;align-items:center;padding:8px 16px;text-decoration:none;color:#fff;" + bg).with(
-                        avatar(participant.getName(), 40),
-                        span(participant.getName()).withStyle("margin-left:10px;")
-                );
+        if (chatId != null) {
+            return a()
+                    .attr("hx-get", "/chat/" + chatId + "/details")
+                    .attr("hx-target", "#chat-content")
+                    .attr("hx-swap", "outerHTML")
+                    .withHref("/chat/" + chatId)
+                    .withStyle("display:flex;align-items:center;padding:8px 16px;text-decoration:none;color:#fff;" + bg).with(
+                            avatar(participant.getName(), 40),
+                            span(participant.getName()).withStyle("margin-left:10px;")
+                    );
+        } else {
+            return a().withHref("/chat/dm/" + participant.getId())
+                    .withStyle("display:flex;align-items:center;padding:8px 16px;text-decoration:none;color:#fff;" + bg).with(
+                            avatar(participant.getName(), 40),
+                            span(participant.getName()).withStyle("margin-left:10px;")
+                    );
+        }
     }
 
-    private List<List<Message>> groupMessages(List<Message> messages) {
+    static List<List<Message>> groupMessages(List<Message> messages) {
         List<List<Message>> groups = new ArrayList<>();
         if (messages == null || messages.isEmpty()) return groups;
         List<Message> currentGroup = new ArrayList<>();
@@ -118,7 +138,7 @@ public class ChatDetailPage extends PageView {
         return groups;
     }
 
-    private DomContent messageGroup(List<Message> group, String currentUserId, Participant otherParticipant) {
+    static DomContent messageGroup(List<Message> group, String currentUserId, Participant otherParticipant) {
         Message first = group.get(0);
         boolean isCurrentUser = first.getAuthorId().equals(currentUserId);
         String authorName = isCurrentUser ? "You"
