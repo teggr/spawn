@@ -11,6 +11,7 @@ Spawn is a Spring Boot application that enables configuration, building, and dep
 - **Spring Data JPA** - Data persistence layer
 - **H2 Database** - In-memory database for development
 - **J2HTML 1.6.0** - Java HTML builder for server-side rendering
+- **HTMX 1.9.10** - Progressive enhancement for AJAX interactions (via CDN)
 - **Docker Java 3.3.4** - Docker client integration
 - **Maven** - Build and dependency management
 - **JUnit 5** - Testing framework
@@ -75,6 +76,11 @@ The application uses server-side rendered HTML with Spring MVC patterns:
 
 ### Read-Only Resources (Models)
 - `GET /models` - Display list page with models loaded from CSV (read-only, no create/edit/delete operations)
+
+### HTMX Fragment Endpoints (Chat)
+- `GET /chat/{chatId}/details` - Returns `ChatDetailsFragment` (partial HTML: chat panel without sidebar/layout)
+- `GET /chat/{chatId}/messages` - Returns `ChatMessagesFragment` (partial HTML: messages list only)
+- `POST /chat/{chatId}/messages` - Returns `ChatMessagesFragment` when `HX-Request` header is present; redirects otherwise
 
 All endpoints return HTML views rendered using J2HTML, not JSON responses.
 
@@ -161,6 +167,89 @@ When creating or editing applications:
 - ApplicationService validates that the selected provider exists in the CSV
 - ApplicationResponse includes the full ModelResponse object by looking up the provider name
 
+## HTMX Integration
+
+HTMX 1.9.10 is loaded via CDN in `DefaultPageLayout.java` and provides progressive enhancement across the entire UI.
+
+### Navigation Boost
+
+All navbar links (Chat, Models, MCP Servers, Agents, Applications, home brand) carry `hx-boost="true"`, enabling seamless AJAX navigation without full page reloads.
+
+### Fragment Views
+
+Fragment views are `PageView` subclasses that render **partial HTML** (no `<html>`/`<head>`/`<body>` wrapper). They are Spring `@Component` beans resolved by `BeanNameViewResolver` just like full page views. Fragment view names end with `Fragment` (e.g. `chatDetailsFragment`, `chatMessagesFragment`).
+
+**Fragment vs full page:**
+- Full page views call `createPage(...)` from `DefaultPageLayout` and return a complete HTML document.
+- Fragment views return only the relevant content div — they must **not** call `createPage(...)`.
+- Fragment divs must carry a stable `id` attribute so HTMX can target them with `hx-target`.
+
+**Example fragment:**
+```java
+@Component
+public class ChatMessagesFragment extends PageView {
+    @Override
+    protected DomContent renderPage(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) {
+        // returns a bare div, no DefaultPageLayout.createPage(...)
+        return div().withId("messages-container").withStyle("...").with(...);
+    }
+}
+```
+
+### HTMX Request Detection
+
+Controllers detect HTMX requests via the `HX-Request` header (automatically sent by HTMX on every request). Use `@RequestHeader(value = "HX-Request", required = false)` to make it optional, then branch on whether the header is present:
+
+```java
+@PostMapping("/{chatId}/messages")
+public String sendMessage(@PathVariable String chatId,
+                          @RequestParam String content,
+                          @RequestHeader(value = "HX-Request", required = false) String htmxRequest,
+                          Model model) {
+    // ... process request ...
+    if (htmxRequest != null) {
+        // populate model and return fragment view name
+        return "chatMessagesFragment";
+    }
+    return "redirect:/chat/" + chatId;  // standard redirect for non-HTMX
+}
+```
+
+### HTMX Attributes in J2HTML
+
+Use `.attr("hx-*", value)` to add HTMX attributes in J2HTML view classes:
+
+```java
+// hx-boost on a link
+a("Chat").withHref("/chat").attr("hx-boost", "true")
+
+// HTMX form submission targeting a specific element
+form().attr("method", "post").attr("action", "/chat/" + chatId + "/messages")
+      .attr("hx-post", "/chat/" + chatId + "/messages")
+      .attr("hx-target", "#messages-container")
+      .attr("hx-swap", "outerHTML")
+      .attr("hx-on::after-request", "this.reset()")
+
+// HTMX link updating a panel in-place (with plain href fallback)
+a().attr("hx-get", "/chat/" + chatId + "/details")
+   .attr("hx-target", "#chat-content")
+   .attr("hx-swap", "outerHTML")
+   .withHref("/chat/" + chatId)
+```
+
+Always keep a plain `href`/`method`/`action` fallback on interactive elements so the app degrades gracefully without JavaScript.
+
+### HTMX Attributes Used in This Project
+
+| Attribute | Purpose |
+|-----------|---------|
+| `hx-boost="true"` | Enable HTMX handling for navigation links |
+| `hx-get` | Make GET request via HTMX |
+| `hx-post` | Make POST request via HTMX |
+| `hx-target` | CSS selector of element to update with response |
+| `hx-swap` | How to insert response (`outerHTML` replaces the target element) |
+| `hx-on::after-request` | Run JS expression after HTMX completes the request |
+
 ## Development Workflow
 
 1. Create or modify entities and corresponding controllers, services, repositories, DTOs and views inside the appropriate domain package: `apps/`, `mcp/`, `models/`, or `chat/`.
@@ -182,3 +271,7 @@ When creating or editing applications:
 - Forms submit via POST with `@RequestParam` for form fields
 - Use redirects after successful POST operations (Post-Redirect-Get pattern)
 - Keep business logic in the service layer, not in controllers
+- HTMX is included on every page via `DefaultPageLayout` — use `hx-boost` on navigation links
+- Fragment views extend `PageView` but return partial HTML (no `createPage(...)` call)
+- Use `@RequestHeader(value = "HX-Request", required = false)` to detect HTMX requests in controllers
+- Always provide a plain `href`/`method`/`action` fallback alongside HTMX attributes for progressive enhancement

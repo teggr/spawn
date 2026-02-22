@@ -229,6 +229,77 @@ void shouldAddRelatedResource() throws Exception {
 9. **Test Error Cases**: Include tests for error scenarios (not found, validation errors, etc.)
 10. **Follow Existing Patterns**: Match the style and structure of existing tests
 
+## Testing HTMX Endpoints
+
+### Test Fragment GET Endpoints
+
+Fragment endpoints return partial HTML. Assert that the expected element ID is present and that the response does **not** contain a full HTML document:
+
+```java
+@Test
+void shouldReturnDetailsFragment() throws Exception {
+    // Set up data first
+    Chat chat = createChatWithParticipants();
+
+    mockMvc.perform(get("/chat/" + chat.getId() + "/details"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("id=\"chat-content\"")))
+            .andExpect(content().string(containsString("id=\"messages-container\"")))
+            .andExpect(content().string(not(containsString("<html"))));
+}
+```
+
+Import `org.hamcrest.Matchers.containsString` and `org.hamcrest.Matchers.not` for content string assertions.
+
+### Test HTMX-Aware POST Endpoints
+
+Send the `HX-Request: true` header to simulate an HTMX request; omit it to simulate a plain form submission:
+
+```java
+@Test
+void shouldReturnFragmentWhenPostIsViaHtmx() throws Exception {
+    Chat chat = createChatWithParticipants();
+
+    mockMvc.perform(post("/chat/" + chat.getId() + "/messages")
+                    .header("HX-Request", "true")
+                    .param("content", "Hello!"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("id=\"messages-container\"")))
+            .andExpect(content().string(containsString("Hello!")))
+            .andExpect(content().string(not(containsString("<html"))));
+}
+
+@Test
+void shouldRedirectWhenPostIsNotViaHtmx() throws Exception {
+    Chat chat = createChatWithParticipants();
+
+    mockMvc.perform(post("/chat/" + chat.getId() + "/messages")
+                    .param("content", "Hello!"))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/chat/" + chat.getId()));
+}
+```
+
+### Test HTMX Attributes in Rendered Pages
+
+Verify that HTMX script and attributes are present in full-page responses using content string assertions:
+
+```java
+@Test
+void shouldIncludeHtmxScriptInPage() throws Exception {
+    mockMvc.perform(get("/chat"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("htmx.org@1.9.10")));
+}
+
+@Test
+void shouldIncludeHxBoostOnNavbarLinks() throws Exception {
+    mockMvc.perform(get("/chat"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("hx-boost=\"true\"")));
+}
+```
+
 ## Common Assertions
 
 ```java
@@ -247,6 +318,11 @@ void shouldAddRelatedResource() throws Exception {
 .andExpect(model().attributeExists("resources"))
 .andExpect(model().attribute("name", "expected"))
 .andExpect(model().attributeExists("error"))
+
+// Content string assertions (use for fragment and HTMX attribute checks)
+.andExpect(content().string(containsString("id=\"messages-container\"")))
+.andExpect(content().string(not(containsString("<html"))))  // fragment has no page wrapper
+.andExpect(content().string(containsString("hx-boost=\"true\"")))
 ```
 
 ## When Creating New Tests

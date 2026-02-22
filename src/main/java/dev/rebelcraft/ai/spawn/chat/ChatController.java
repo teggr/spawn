@@ -94,12 +94,52 @@ public class ChatController {
         return "chatDetailPage";
     }
 
+    @GetMapping("/{chatId}/details")
+    public String chatDetails(@PathVariable String chatId, Model model) {
+        Optional<Chat> chatOpt = chatManagementService.getChat(chatId);
+        if (chatOpt.isEmpty()) {
+            return "redirect:/chat";
+        }
+        model.addAttribute("chatId", chatId);
+        populateChatFragmentModel(chatOpt.get(), chatId, model);
+        return "chatDetailsFragment";
+    }
+
+    @GetMapping("/{chatId}/messages")
+    public String chatMessages(@PathVariable String chatId, Model model) {
+        Optional<Chat> chatOpt = chatManagementService.getChat(chatId);
+        if (chatOpt.isEmpty()) {
+            return "redirect:/chat";
+        }
+        populateChatFragmentModel(chatOpt.get(), chatId, model);
+        return "chatMessagesFragment";
+    }
+
     @PostMapping("/{chatId}/messages")
     public String sendMessage(@PathVariable String chatId,
-                              @RequestParam String content) {
+                              @RequestParam String content,
+                              @RequestHeader(value = "HX-Request", required = false) String htmxRequest,
+                              Model model) {
         String currentUserId = JpaParticipantService.CURRENT_USER_ID;
         Message message = new Message(null, chatId, currentUserId, content, LocalDateTime.now());
         messagingService.sendMessage(chatId, message);
+        if (htmxRequest != null) {
+            chatManagementService.getChat(chatId).ifPresent(chat -> populateChatFragmentModel(chat, chatId, model));
+            return "chatMessagesFragment";
+        }
         return "redirect:/chat/" + chatId;
+    }
+
+    private void populateChatFragmentModel(Chat chat, String chatId, Model model) {
+        String currentUserId = JpaParticipantService.CURRENT_USER_ID;
+        List<Message> messages = messagingService.getMessages(chatId, null);
+        Participant otherParticipant = chat.getParticipantIds().stream()
+                .filter(id -> !id.equals(currentUserId))
+                .findFirst()
+                .map(participantService::getParticipant)
+                .orElse(null);
+        model.addAttribute("currentUserId", currentUserId);
+        model.addAttribute("messages", messages);
+        model.addAttribute("otherParticipant", otherParticipant);
     }
 }
